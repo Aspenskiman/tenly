@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register } from '../api/auth';
+import { register, login } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
@@ -19,8 +19,6 @@ export default function Register() {
     setLoading(true);
     try {
       await register(form);
-      // Auto-login after registration
-      const { login } = await import('../api/auth');
       const user = await login(form.email, form.password);
       setUser(user);
       navigate('/dashboard');
