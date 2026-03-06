@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: tenly_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tenly
+      POSTGRES_PASSWORD: tenly_secret
+      POSTGRES_DB: tenly
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: tenly_server
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://tenly:tenly_secret@db:5432/tenly
+      JWT_SECRET: local_dev_jwt_secret_change_in_prod
+      JWT_REFRESH_SECRET: local_dev_refresh_secret_change_in_prod
+      NODE_ENV: development
+      EMAIL_TRANSPORT: console
+      PORT: 3000
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: tenly_client
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+volumes:
+  pgdata:

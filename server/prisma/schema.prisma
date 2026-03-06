@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  manager
+  executive
+}
+
+model Company {
+  id         String   @id @default(uuid())
+  name       String
+  created_at DateTime @default(now())
+  users      User[]
+  teams      Team[]
+}
+
+model User {
+  id             String           @id @default(uuid())
+  company_id     String
+  name           String
+  email          String           @unique
+  password_hash  String
+  role           Role             @default(manager)
+  created_at     DateTime         @default(now())
+  company        Company          @relation(fields: [company_id], references: [id])
+  teams          Team[]
+  logged_entries HappinessEntry[]
+  refresh_tokens RefreshToken[]
+}
+
+model Team {
+  id         String       @id @default(uuid())
+  company_id String
+  manager_id String
+  name       String
+  created_at DateTime     @default(now())
+  company    Company      @relation(fields: [company_id], references: [id])
+  manager    User         @relation(fields: [manager_id], references: [id])
+  members    TeamMember[]
+}
+
+model TeamMember {
+  id          String           @id @default(uuid())
+  team_id     String
+  name        String
+  email       String?
+  created_at  DateTime         @default(now())
+  archived_at DateTime?
+  team        Team             @relation(fields: [team_id], references: [id])
+  entries     HappinessEntry[]
+}
+
+model HappinessEntry {
+  id                String     @id @default(uuid())
+  team_member_id    String
+  logged_by_user_id String
+  score             Int
+  notes             String?    @db.VarChar(500)
+  interaction_date  DateTime
+  created_at        DateTime   @default(now())
+  team_member       TeamMember @relation(fields: [team_member_id], references: [id])
+  logged_by         User       @relation(fields: [logged_by_user_id], references: [id])
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  user_id    String
+  token_hash String   @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
