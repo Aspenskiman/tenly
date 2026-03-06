@@ -2,6 +2,19 @@
 
 > **Stop asking "How are you doing?" — start knowing.**
 
+## Live Demo
+
+| Service | URL |
+|---------|-----|
+| **Frontend** | https://tenly-xi.vercel.app |
+| **Backend API** | https://tenly.onrender.com |
+
+**Demo credentials** (seed data included):
+- Executive: `exec@acme.com` / `password`
+- Manager 1: `manager1@acme.com` / `password`
+- Manager 2: `manager2@acme.com` / `password`
+- Manager 3: `manager3@acme.com` / `password`
+
 Tenly gives leaders a simple, shared language for human connection. After every 1:1, you log a Tenly score (1–10). Over time, those numbers reveal who's thriving and who needs attention — before it's too late.
 
 ## Philosophy
@@ -20,7 +33,7 @@ Tenly gives leaders a simple, shared language for human connection. After every 
 
 ### 1. Clone and configure
 ```bash
-git clone https://github.com/YOUR_USERNAME/tenly.git
+git clone https://github.com/Aspenskiman/tenly.git
 cd tenly
 cp .env.example server/.env
 # Edit server/.env with your values
