@@ -3,7 +3,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import ManagerDashboard from './pages/ManagerDashboard';
+import TeamDashboard from './pages/TeamDashboard';
+import TeamRoster from './pages/TeamRoster';
+import LogScore from './pages/LogScore';
+import MemberDashboard from './pages/MemberDashboard';
 import ExecutiveDashboard from './pages/ExecutiveDashboard';
 
 function RootRedirect() {
@@ -21,14 +24,42 @@ export default function App() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Manager routes */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute role="manager">
-                <ManagerDashboard />
+                <TeamDashboard />
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/roster"
+            element={
+              <ProtectedRoute role="manager">
+                <TeamRoster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/log"
+            element={
+              <ProtectedRoute role="manager">
+                <LogScore />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/members/:memberId"
+            element={
+              <ProtectedRoute role="manager">
+                <MemberDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Executive */}
           <Route
             path="/executive"
             element={
@@ -37,6 +68,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

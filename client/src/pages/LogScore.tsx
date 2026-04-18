@@ -1,0 +1,188 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Layout from '../components/Layout';
+import { getMyTeams, getTeamSummary, logEntry, getMemberEntries, MemberWithTrend } from '../api/teams';
+import { getScoreColor, getScoreTextColor, getScoreBorder, getZoneLabel, formatDate } from '../lib/scores';
+
+const SCORE_ZONES: Record<number, string> = {
+  1: 'Really hard right now', 2: 'Going through a lot', 3: 'Going through a lot',
+  4: 'Holding through it', 5: 'Holding through it',
+  6: 'In a good place', 7: 'In a good place', 8: 'In a good place',
+  9: 'Firing on all cylinders', 10: 'Firing on all cylinders',
+};
+
+export default function LogScore() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const qc = useQueryClient();
+
+  const preselectedId = searchParams.get('memberId');
+  const preselectedName = searchParams.get('memberName');
+
+  const [selectedMemberId, setSelectedMemberId] = useState(preselectedId ?? '');
+  const [score, setScore] = useState<number | null>(null);
+  const [notes, setNotes] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getMyTeams });
+  const teamId = teams?.[0]?.id;
+
+  const { data: summary } = useQuery({
+    queryKey: ['team-summary', teamId],
+    queryFn: () => getTeamSummary(teamId!),
+    enabled: !!teamId,
+  });
+
+  const members = summary?.members ?? [];
+  const selectedMember = members.find(m => m.id === selectedMemberId);
+
+  // Recent entries for the selected member (last 3)
+  const { data: recentEntries } = useQuery({
+    queryKey: ['entries', selectedMemberId],
+    queryFn: () => getMemberEntries(selectedMemberId, 30),
+    enabled: !!selectedMemberId,
+  });
+
+  const last3 = (recentEntries ?? []).slice(-3).reverse();
+
+  const logMutation = useMutation({
+    mutationFn: () => logEntry(selectedMemberId, {
+      score: score!,
+      notes: notes.trim() || undefined,
+      interaction_date: new Date().toISOString(),
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['team-summary', teamId] });
+      qc.invalidateQueries({ queryKey: ['entries', selectedMemberId] });
+      setSaved(true);
+      setScore(null);
+      setNotes('');
+      setTimeout(() => {
+        setSaved(false);
+        navigate('/roster');
+      }, 1200);
+    },
+  });
+
+  const scoreColor = score ? getScoreColor(score) : '#71717a';
+
+  return (
+    <Layout>
+      <div className="max-w-sm mx-auto space-y-6 pb-20">
+        {/* Header */}
+        <div>
+          <h1 className="text-xl font-black text-white">Log a Score</h1>
+          <p className="text-xs text-zinc-500 mt-0.5">After every 1:1. One number. Real signal.</p>
+        </div>
+
+        {/* Member selector */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Team member</label>
+          <select
+            value={selectedMemberId}
+            onChange={e => { setSelectedMemberId(e.target.value); setScore(null); setNotes(''); }}
+            className="w-full px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-zinc-600 appearance-none"
+          >
+            <option value="">Select a member…</option>
+            {members.map(m => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Recent scores (last 3) */}
+        {selectedMemberId && last3.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Recent</p>
+            <div className="flex gap-2">
+              {last3.map((e, i) => (
+                <div
+                  key={e.id}
+                  className={`flex-1 bg-zinc-900 border rounded-xl p-3 text-center ${i === 0 ? 'border-zinc-700' : 'border-zinc-800 opacity-50'}`}
+                >
+                  <span className={`text-2xl font-black ${getScoreTextColor(e.score)}`}>{e.score}</span>
+                  <p className="text-xs text-zinc-600 mt-0.5">{formatDate(e.interaction_date)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Score grid */}
+        {selectedMemberId && (
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+              What's their Tenly score?
+            </label>
+            <div className="grid grid-cols-5 gap-2">
+              {[1,2,3,4,5,6,7,8,9,10].map(n => {
+                const color = getScoreColor(n);
+                const isSelected = score === n;
+                return (
+                  <button
+                    key={n}
+                    onClick={() => setScore(n)}
+                    className={`h-14 rounded-xl text-lg font-black transition-all border-2 ${
+                      isSelected
+                        ? 'border-transparent text-black scale-105'
+                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white bg-zinc-900'
+                    }`}
+                    style={isSelected ? { backgroundColor: color, borderColor: color } : {}}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Zone label */}
+            {score && (
+              <p className="text-xs text-center font-semibold" style={{ color: scoreColor }}>
+                {SCORE_ZONES[score]}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Notes */}
+        {score !== null && (
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Note (optional)</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder="What came up in the conversation?"
+              className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 resize-none"
+            />
+            <p className="text-xs text-zinc-600 text-right">{notes.length}/500</p>
+          </div>
+        )}
+
+        {/* Save button */}
+        <button
+          onClick={() => logMutation.mutate()}
+          disabled={!selectedMemberId || score === null || logMutation.isPending || saved}
+          className="w-full py-4 rounded-xl font-black text-base transition-all disabled:opacity-30"
+          style={
+            score !== null && selectedMemberId
+              ? { backgroundColor: scoreColor, color: '#000' }
+              : { backgroundColor: '#27272C', color: '#71717a' }
+          }
+        >
+          {saved ? '✓ Logged' : logMutation.isPending ? 'Logging…' : score !== null ? `Log ${score}/10` : 'Select a score'}
+        </button>
+
+        {/* Cancel */}
+        <button
+          onClick={() => navigate('/roster')}
+          className="w-full py-2 text-sm text-zinc-500 hover:text-white transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </Layout>
+  );
+}

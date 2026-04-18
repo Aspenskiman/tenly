@@ -24,6 +24,21 @@ export interface HappinessEntry {
   created_at: string;
 }
 
+export interface MemberWithTrend extends TeamMember {
+  entries: HappinessEntry[];
+  trend: 'up' | 'down' | 'stable' | 'insufficient_data';
+  recentAvg: number | null;
+  delta: number | null;
+  lastEntry: HappinessEntry | null;
+}
+
+export interface TeamSummary {
+  id: string;
+  name: string;
+  manager_id: string;
+  members: MemberWithTrend[];
+}
+
 export async function getMyTeams(): Promise<Team[]> {
   const { data } = await api.get('/teams/my');
   return data.teams;
@@ -32,6 +47,11 @@ export async function getMyTeams(): Promise<Team[]> {
 export async function getAllTeams(): Promise<Team[]> {
   const { data } = await api.get('/company/teams');
   return data.teams;
+}
+
+export async function getTeamSummary(teamId: string, days = 90): Promise<TeamSummary> {
+  const { data } = await api.get(`/teams/${teamId}/summary?days=${days}`);
+  return data.team;
 }
 
 export async function createTeam(name: string): Promise<Team> {
@@ -47,6 +67,10 @@ export async function addMember(
   return data.member;
 }
 
+export async function archiveMember(memberId: string): Promise<void> {
+  await api.delete(`/teams/members/${memberId}`);
+}
+
 export async function logEntry(
   memberId: string,
   payload: { score: number; notes?: string; interaction_date: string }
@@ -57,7 +81,7 @@ export async function logEntry(
 
 export async function getMemberEntries(
   memberId: string,
-  days = 30
+  days = 90
 ): Promise<HappinessEntry[]> {
   const { data } = await api.get(`/teams/members/${memberId}/entries?days=${days}`);
   return data.entries;

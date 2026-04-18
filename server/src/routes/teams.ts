@@ -4,7 +4,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { getMyTeams, getAllTeams, createTeam } from '../controllers/teamController.js';
 import { addMember, archiveMember } from '../controllers/memberController.js';
-import { logEntry, getMemberEntries } from '../controllers/entryController.js';
+import { logEntry, getMemberEntries, getTeamSummary } from '../controllers/entryController.js';
 
 const router = Router();
 
@@ -22,6 +22,7 @@ const logEntrySchema = z.object({
 // Manager routes
 router.get('/my', requireAuth, requireRole('manager'), getMyTeams);
 router.post('/', requireAuth, requireRole('manager'), validate(createTeamSchema), createTeam);
+router.get('/:teamId/summary', requireAuth, requireRole('manager'), getTeamSummary);
 
 // Members
 router.post('/:teamId/members', requireAuth, requireRole('manager'), validate(addMemberSchema), addMember);
