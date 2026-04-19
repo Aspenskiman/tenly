@@ -3,9 +3,7 @@ import { PrismaClient, Plan } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-03-31.basil',
-});
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export const PRICE_IDS: Record<string, string> = {
   SOLO: process.env.STRIPE_SOLO_PRICE_ID!,
@@ -31,7 +29,6 @@ export async function createCheckoutSession({
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) throw new Error('Company not found');
 
-  // Create or reuse Stripe customer
   let customerId = company.stripe_customer_id ?? undefined;
   if (!customerId) {
     const customer = await stripe.customers.create({
@@ -61,7 +58,8 @@ export async function createCheckoutSession({
 
 export async function handleWebhook(payload: Buffer, signature: string) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-  let event: Stripe.Event;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let event: any;
 
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
@@ -73,37 +71,34 @@ export async function handleWebhook(payload: Buffer, signature: string) {
     event.type === 'checkout.session.completed' ||
     event.type === 'customer.subscription.updated'
   ) {
-    const obj = event.data.object as Stripe.Checkout.Session | Stripe.Subscription;
-    const metadata = obj.metadata ?? {};
+    const obj = event.data.object as Record<string, any>;
+    const metadata: Record<string, string> = obj.metadata ?? {};
     const companyId = metadata.companyId;
     const plan = metadata.plan as Plan | undefined;
 
     if (companyId && plan && Object.values(Plan).includes(plan)) {
-      const subscriptionId =
+      const subscriptionId: string =
         event.type === 'checkout.session.completed'
-          ? (obj as Stripe.Checkout.Session).subscription as string
-          : (obj as Stripe.Subscription).id;
+          ? String(obj.subscription)
+          : String(obj.id);
 
       await prisma.company.update({
         where: { id: companyId },
-        data: {
-          plan,
-          stripe_subscription_id: subscriptionId,
-        },
+        data: { plan, stripe_subscription_id: subscriptionId },
       });
       console.log(`[Stripe] Company ${companyId} upgraded to ${plan}`);
     }
   }
 
   if (event.type === 'customer.subscription.deleted') {
-    const sub = event.data.object as Stripe.Subscription;
-    const companyId = sub.metadata?.companyId;
+    const sub = event.data.object as Record<string, any>;
+    const companyId: string | undefined = (sub.metadata as Record<string, string>)?.companyId;
     if (companyId) {
       await prisma.company.update({
         where: { id: companyId },
         data: { plan: Plan.FREE, stripe_subscription_id: null },
       });
-      console.log(`[Stripe] Company ${companyId} downgraded to FREE (subscription cancelled)`);
+      console.log(`[Stripe] Company ${companyId} downgraded to FREE`);
     }
   }
 
