@@ -98,7 +98,9 @@ function AddMemberModal({ teamId, onClose, onAdded, onUpgradeRequired }: {
     mutationFn: () => addMember(teamId, { name: name.trim(), email: email.trim() || undefined }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['teams'] }); onAdded(); onClose(); },
     onError: (err: any) => {
-      if (err?.response?.data?.error === 'UPGRADE_REQUIRED') {
+      const errorCode = err?.response?.data?.error;
+      const status = err?.response?.status;
+      if (status === 403 || errorCode === 'UPGRADE_REQUIRED') {
         onClose();
         onUpgradeRequired();
       }
