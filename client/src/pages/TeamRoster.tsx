@@ -74,7 +74,7 @@ function MemberRow({ member, onLog, onArchive }: {
               onArchive(member.id);
             }
           }}
-          className="p-1 text-zinc-600 hover:text-red-400 transition text-xs"
+          className="p-1 text-zinc-600 hover:text-orange-400 transition text-xs"
           title="Archive"
         >
           ×

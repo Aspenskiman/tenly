@@ -63,7 +63,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+              <p className="text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">{error}</p>
             )}
 
             <button

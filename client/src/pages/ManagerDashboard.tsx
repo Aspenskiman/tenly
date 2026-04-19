@@ -10,7 +10,7 @@ function ScoreButton({ n, selected, onClick }: { n: number; selected: boolean; o
     n <= 3 ? 'red' : n <= 5 ? 'amber' : n <= 7 ? 'yellow' : 'green';
   const base = `w-9 h-9 rounded-full text-sm font-bold transition border-2`;
   const styles: Record<string, string> = {
-    red: selected ? 'bg-red-500 text-white border-red-500' : 'border-red-300 text-red-500 hover:bg-red-50',
+    red: selected ? 'bg-orange-500 text-white border-orange-500' : 'border-orange-300 text-orange-500 hover:bg-orange-50',
     amber: selected ? 'bg-amber-500 text-white border-amber-500' : 'border-amber-300 text-amber-500 hover:bg-amber-50',
     yellow: selected ? 'bg-yellow-400 text-white border-yellow-400' : 'border-yellow-300 text-yellow-600 hover:bg-yellow-50',
     green: selected ? 'bg-green-500 text-white border-green-500' : 'border-green-300 text-green-600 hover:bg-green-50',
