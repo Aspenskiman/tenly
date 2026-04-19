@@ -36,7 +36,7 @@ function trendLabel(entries: MemberWithEntries['entries']): { label: string; col
   const firstAvg = first.reduce((s, e) => s + e.score, 0) / first.length;
   const lastAvg = last.reduce((s, e) => s + e.score, 0) / last.length;
   const delta = lastAvg - firstAvg;
-  if (delta <= -0.5) return { label: '↓ Falling', color: 'text-red-500' };
+  if (delta <= -0.5) return { label: '↓ Falling', color: 'text-orange-400' };
   if (delta >= 0.5) return { label: '↑ Rising', color: 'text-green-600' };
   return { label: '→ Stable', color: 'text-gray-500' };
 }

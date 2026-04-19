@@ -144,7 +144,7 @@ export default function TeamDashboard() {
         {leanIn.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <div className="w-2 h-2 rounded-full bg-orange-400" />
               <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Lean In</p>
             </div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
