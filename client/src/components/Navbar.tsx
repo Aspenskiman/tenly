@@ -94,26 +94,27 @@ export default function Navbar() {
 
         {user && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 12, color: 'rgba(180,180,255,0.3)' }}>{user.name}</span>
+            <span style={{ fontSize: 12, color: 'rgba(180,180,255,0.6)' }}>{user.name}</span>
 
             {/* Plan badge */}
             <button
               onClick={() => setShowPlan(true)}
               title={`${badge.label} plan — click to manage`}
               style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: '0.04em',
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '0.05em',
                 textTransform: 'uppercase',
                 color: badge.color,
                 background: badge.bg,
-                border: `1px solid ${badge.color}30`,
-                borderRadius: 6,
-                padding: '2px 7px',
+                border: `1px solid ${badge.color}25`,
+                borderRadius: 5,
+                padding: '2px 6px',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 transition: 'all 0.15s',
                 lineHeight: 1.6,
+                opacity: 0.85,
               }}
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
