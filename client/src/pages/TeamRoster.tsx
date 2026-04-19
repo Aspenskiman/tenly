@@ -108,6 +108,12 @@ function AddMemberModal({ teamId, onClose, onAdded, onUpgradeRequired }: {
       const status = err?.response?.status;
       const errorCode = err?.response?.data?.error;
       if (status === 403 || errorCode === 'UPGRADE_REQUIRED') {
+        // Save pending member so we can auto-add after upgrade
+        localStorage.setItem('pendingMember', JSON.stringify({
+          teamId,
+          name: name.trim(),
+          email: email.trim() || undefined,
+        }));
         onClose();
         onUpgradeRequired();
       }
