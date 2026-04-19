@@ -1,86 +1,171 @@
-import { useEffect, useState } from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Legend,
-} from 'recharts';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import Layout from '../components/Layout';
 import { getCompanyData } from '../api/teams';
+import { getScoreColor, getScoreTextColor, getZoneLabel } from '../lib/scores';
 
-interface MemberWithEntries {
+interface Entry {
+  score: number;
+  interaction_date: string;
+  notes: string | null;
+}
+
+interface Member {
   id: string;
   name: string;
-  email?: string;
-  entries: Array<{ score: number; interaction_date: string; notes: string | null }>;
+  entries: Entry[];
 }
 
-interface TeamData {
+interface Team {
   id: string;
   name: string;
-  manager?: { name: string };
-  members: MemberWithEntries[];
+  manager?: { id: string; name: string };
+  members: Member[];
 }
 
-function avg(entries: MemberWithEntries['entries']): number | null {
-  if (!entries.length) return null;
-  return entries.reduce((s, e) => s + e.score, 0) / entries.length;
+function teamAvg(team: Team): number | null {
+  const scores = team.members.flatMap(m => m.entries.map(e => e.score));
+  if (!scores.length) return null;
+  return scores.reduce((a, b) => a + b, 0) / scores.length;
 }
 
-function trendLabel(entries: MemberWithEntries['entries']): { label: string; color: string } {
-  if (entries.length < 4) return { label: 'N/A', color: 'text-gray-400' };
-  const half = Math.floor(entries.length / 2);
-  const sorted = [...entries].sort(
-    (a, b) => new Date(a.interaction_date).getTime() - new Date(b.interaction_date).getTime()
+function companyAvgCalc(teams: Team[]): number | null {
+  const scores = teams.flatMap(t => t.members.flatMap(m => m.entries.map(e => e.score)));
+  if (!scores.length) return null;
+  return scores.reduce((a, b) => a + b, 0) / scores.length;
+}
+
+function calcTrend(entries: Entry[]): 'up' | 'down' | 'stable' {
+  if (entries.length < 4) return 'stable';
+  const sorted = [...entries].sort((a, b) =>
+    new Date(a.interaction_date).getTime() - new Date(b.interaction_date).getTime()
   );
-  const first = sorted.slice(0, half);
-  const last = sorted.slice(half);
-  const firstAvg = first.reduce((s, e) => s + e.score, 0) / first.length;
-  const lastAvg = last.reduce((s, e) => s + e.score, 0) / last.length;
-  const delta = lastAvg - firstAvg;
-  if (delta <= -0.5) return { label: '↓ Falling', color: 'text-orange-400' };
-  if (delta >= 0.5) return { label: '↑ Rising', color: 'text-green-600' };
-  return { label: '→ Stable', color: 'text-gray-500' };
+  const half = Math.floor(sorted.length / 2);
+  const first = sorted.slice(0, half).reduce((s, e) => s + e.score, 0) / half;
+  const last = sorted.slice(half).reduce((s, e) => s + e.score, 0) / (sorted.length - half);
+  const delta = last - first;
+  if (delta <= -0.5) return 'down';
+  if (delta >= 0.5) return 'up';
+  return 'stable';
+}
+
+function TeamRow({ team }: { team: Team }) {
+  const [expanded, setExpanded] = useState(false);
+  const avg = teamAvg(team);
+  const allEntries = team.members.flatMap(m => m.entries);
+  const trend = calcTrend(allEntries);
+
+  const trendArrow = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→';
+  const trendColor = trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-orange-400' : 'text-zinc-500';
+
+  const weeklyData = (() => {
+    const weeks: number[][] = Array.from({ length: 8 }, () => []);
+    const now = Date.now();
+    allEntries.forEach(e => {
+      const daysAgo = Math.floor((now - new Date(e.interaction_date).getTime()) / 86400000);
+      const weekIndex = Math.min(7, Math.floor(daysAgo / 7));
+      weeks[7 - weekIndex].push(e.score);
+    });
+    return weeks
+      .map(w => ({ s: w.length ? w.reduce((a, b) => a + b, 0) / w.length : null }))
+      .filter(w => w.s !== null);
+  })();
+
+  return (
+    <div className="border-b border-zinc-800 last:border-0">
+      <div
+        className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-zinc-800/30 transition"
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white truncate">{team.name}</p>
+          {team.manager && (
+            <p className="text-xs text-zinc-600 mt-0.5">{team.manager.name}</p>
+          )}
+        </div>
+
+        <div className="w-20 h-8 shrink-0">
+          {weeklyData.length >= 2 && (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={weeklyData}>
+                <Line
+                  type="monotone"
+                  dataKey="s"
+                  stroke={avg ? getScoreColor(avg) : '#52525b'}
+                  strokeWidth={1.5}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span
+            className="text-2xl font-black"
+            style={{ color: avg ? getScoreColor(avg) : '#52525b' }}
+          >
+            {avg !== null ? avg.toFixed(1) : '—'}
+          </span>
+          <span className={`text-sm font-bold ${trendColor}`}>{trendArrow}</span>
+        </div>
+
+        <span className="text-zinc-600 text-xs">{expanded ? '▲' : '▼'}</span>
+      </div>
+
+      {expanded && (
+        <div className="px-5 pb-3">
+          {team.members
+            .map(m => {
+              const scores = m.entries.map(e => e.score);
+              const a = scores.length ? scores.reduce((x, y) => x + y, 0) / scores.length : null;
+              return { ...m, avg: a };
+            })
+            .sort((a, b) => (a.avg ?? 10) - (b.avg ?? 10))
+            .map(m => (
+              <div key={m.id} className="flex items-center justify-between py-2 border-b border-zinc-800/60 last:border-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">
+                    {m.name.charAt(0)}
+                  </div>
+                  <span className="text-sm text-zinc-300">{m.name}</span>
+                </div>
+                <span className={`text-sm font-bold ${m.avg !== null ? getScoreTextColor(Math.round(m.avg)) : 'text-zinc-600'}`}>
+                  {m.avg !== null ? m.avg.toFixed(1) : '—'}
+                </span>
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ExecutiveDashboard() {
-  const [teams, setTeams] = useState<TeamData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
 
-  useEffect(() => {
-    setLoading(true);
-    getCompanyData(days)
-      .then((data) => setTeams(data as unknown as TeamData[]))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [days]);
-
-  const allMembers = teams.flatMap((t) => t.members);
-  const companyAvg =
-    allMembers.length > 0
-      ? (
-          allMembers.flatMap((m) => m.entries.map((e) => e.score)).reduce((a, b) => a + b, 0) /
-          allMembers.flatMap((m) => m.entries).length
-        ).toFixed(1)
-      : '--';
-
-  const teamBarData = teams.map((t) => {
-    const scores = t.members.flatMap((m) => m.entries.map((e) => e.score));
-    return {
-      name: t.name,
-      avg: scores.length ? +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0,
-    };
+  const { data: rawTeams, isLoading } = useQuery({
+    queryKey: ['company-data', days],
+    queryFn: () => getCompanyData(days),
   });
 
-  const atRisk = allMembers
-    .map((m) => ({ ...m, avg: avg(m.entries), trend: trendLabel(m.entries) }))
-    .filter((m) => m.trend.label === '↓ Falling' || (m.avg !== null && m.avg < 5))
-    .sort((a, b) => (a.avg ?? 10) - (b.avg ?? 10));
+  const teams = (rawTeams ?? []) as unknown as Team[];
+  const avg = companyAvgCalc(teams);
 
-  if (loading) {
+  const sortedTeams = [...teams].sort((a, b) => {
+    const aAvg = teamAvg(a) ?? 10;
+    const bAvg = teamAvg(b) ?? 10;
+    return aAvg - bAvg;
+  });
+
+  if (isLoading) {
     return (
       <Layout>
-        <div className="flex justify-center pt-20">
-          <div className="animate-spin h-8 w-8 border-4 border-tenly-500 border-t-transparent rounded-full" />
+        <div className="space-y-4 mt-4">
+          <div className="h-48 bg-zinc-800/50 rounded-2xl animate-pulse" />
+          <div className="h-32 bg-zinc-800/50 rounded-2xl animate-pulse" />
+          <div className="h-32 bg-zinc-800/50 rounded-2xl animate-pulse" />
         </div>
       </Layout>
     );
@@ -88,112 +173,57 @@ export default function ExecutiveDashboard() {
 
   return (
     <Layout>
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Company Overview</h1>
-            <p className="text-gray-500 text-sm mt-1">Read-only executive view</p>
-          </div>
-          <select
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tenly-500"
+      <div className="max-w-lg mx-auto space-y-5 pb-20">
+
+        {/* Company score hero */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
+          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Company Score</p>
+          <div
+            className="font-black leading-none"
+            style={{
+              fontSize: 96,
+              color: avg ? getScoreColor(avg) : '#52525b',
+              textShadow: avg ? `0 0 60px ${getScoreColor(avg)}40` : undefined,
+            }}
           >
-            <option value={7}>Last 7 days</option>
-            <option value={14}>Last 14 days</option>
-            <option value={30}>Last 30 days</option>
-            <option value={90}>Last 90 days</option>
-          </select>
-        </div>
-
-        {/* KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            { label: 'Company avg score', value: companyAvg + ' / 10' },
-            { label: 'Total team members', value: allMembers.length.toString() },
-            { label: 'At-risk members', value: atRisk.length.toString() },
-          ].map((kpi) => (
-            <div key={kpi.label} className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-sm text-gray-500">{kpi.label}</p>
-              <p className="text-3xl font-black text-gray-900 mt-1">{kpi.value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Team bar chart */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="text-base font-semibold text-gray-800 mb-4">Average Score by Team</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={teamBarData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis domain={[0, 10]} tick={{ fontSize: 12 }} width={25} />
-              <Tooltip />
-              <Bar dataKey="avg" fill="#0284c7" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* At-risk table */}
-        {atRisk.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-base font-semibold text-gray-800 mb-4">Members Needing Attention</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-100">
-                    <th className="pb-2 font-medium">Name</th>
-                    <th className="pb-2 font-medium">Avg Score</th>
-                    <th className="pb-2 font-medium">Trend</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {atRisk.map((m) => (
-                    <tr key={m.id} className="border-b border-gray-50 last:border-0">
-                      <td className="py-2 font-medium text-gray-900">{m.name}</td>
-                      <td className="py-2 text-gray-700">
-                        {m.avg !== null ? m.avg.toFixed(1) : '--'}
-                      </td>
-                      <td className={`py-2 font-medium ${m.trend.color}`}>{m.trend.label}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {avg !== null ? avg.toFixed(1) : '—'}
           </div>
-        )}
+          {avg !== null && (
+            <p className="text-sm text-zinc-500 mt-2">{getZoneLabel(Math.round(avg))}</p>
+          )}
+          <p className="text-xs text-zinc-600 mt-1">
+            {teams.flatMap(t => t.members).length} members · {teams.length} teams
+          </p>
+        </div>
 
-        {/* Team breakdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {teams.map((team) => (
-            <div key={team.id} className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">{team.name}</h3>
-                {team.manager && (
-                  <span className="text-xs text-gray-400">mgr: {team.manager.name}</span>
-                )}
-              </div>
-              <div className="space-y-2">
-                {team.members.map((m) => {
-                  const a = avg(m.entries);
-                  const t = trendLabel(m.entries);
-                  return (
-                    <div key={m.id} className="flex items-center justify-between py-1">
-                      <span className="text-sm text-gray-700">{m.name}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold text-gray-900">
-                          {a !== null ? a.toFixed(1) : '--'}
-                        </span>
-                        <span className={`text-xs font-medium ${t.color}`}>{t.label}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+        {/* Range toggle */}
+        <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1">
+          {[7, 30, 90].map(d => (
+            <button
+              key={d}
+              onClick={() => setDays(d)}
+              className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition ${
+                days === d ? 'bg-zinc-700 text-white' : 'text-zinc-500 hover:text-white'
+              }`}
+            >
+              {d === 7 ? '7d' : d === 30 ? '30d' : '90d'}
+            </button>
           ))}
         </div>
+
+        {/* Team rows — sorted lowest first */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-zinc-800">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Teams — Lowest First</p>
+          </div>
+          {sortedTeams.length === 0 && (
+            <p className="text-center text-zinc-600 text-sm py-8">No team data yet.</p>
+          )}
+          {sortedTeams.map(team => (
+            <TeamRow key={team.id} team={team} />
+          ))}
+        </div>
+
       </div>
     </Layout>
   );
