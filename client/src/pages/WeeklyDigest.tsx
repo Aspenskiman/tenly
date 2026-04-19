@@ -52,8 +52,15 @@ export default function WeeklyDigest() {
 
   const members = summary?.members ?? [];
 
-  const needsAttention = members.filter(
-    m => m.trend === 'down' || (m.recentAvg !== null && m.recentAvg < 5)
+  function hasThreeConsecutiveDrops(member: MemberWithTrend): boolean {
+    const scores = member.entries.slice(-3).map(e => e.score);
+    if (scores.length < 3) return false;
+    return scores[1] < scores[0] && scores[2] < scores[1];
+  }
+
+  const needsAttention = members.filter(m =>
+    (m.trend === 'down' && m.recentAvg !== null && m.recentAvg < 6) ||
+    hasThreeConsecutiveDrops(m)
   );
   const doingWell = members.filter(
     m => m.trend === 'up' && (m.recentAvg !== null && m.recentAvg >= 6)
