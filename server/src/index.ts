@@ -11,16 +11,17 @@ import { startScheduler } from './services/schedulerService.js';
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:4173',
-  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
-];
-
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.some((o) => origin.startsWith(o))) {
+      // Allow all vercel.app domains, localhost, and any configured CLIENT_URL
+      if (
+        !origin ||
+        origin.includes('vercel.app') ||
+        origin.includes('localhost') ||
+        origin.includes('render.com') ||
+        (process.env.CLIENT_URL && origin.startsWith(process.env.CLIENT_URL))
+      ) {
         cb(null, true);
       } else {
         cb(new Error(`CORS blocked: ${origin}`));
@@ -46,6 +47,6 @@ app.use('/api/company', executiveRoutes);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`🚀 Tenly server running on port ${PORT}`);
+  console.log(`Tenly server running on port ${PORT}`);
   startScheduler();
 });
