@@ -7,45 +7,31 @@ const api = axios.create({
   withCredentials: true,
 });
 
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: (v: unknown) => void; reject: (e: unknown) => void }> = [];
-
-function processQueue(error: unknown) {
-  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(null)));
-  failedQueue = [];
-}
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => api(originalRequest))
-          .catch((e) => Promise.reject(e));
-      }
-
+    // Only attempt refresh once, and never on the refresh endpoint itself
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/auth/refresh') &&
+      !originalRequest.url?.includes('/auth/login')
+    ) {
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
         await axios.post(`${BASE}/api/auth/refresh`, {}, { withCredentials: true });
-        processQueue(null);
         return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError);
-        // Redirect to login on refresh failure
+      } catch {
+        // Refresh failed — go to login, do NOT retry
         window.location.href = '/login';
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
+        return Promise.reject(error);
       }
     }
 
+    // For any other 401 (including on /refresh itself), just reject
     return Promise.reject(error);
   }
 );
