@@ -7,33 +7,11 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// No retry interceptor - if a request fails with 401, just let it fail.
+// The ProtectedRoute and AuthContext handle redirecting to login.
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Only attempt refresh once, and never on the refresh endpoint itself
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !originalRequest.url?.includes('/auth/refresh') &&
-      !originalRequest.url?.includes('/auth/login')
-    ) {
-      originalRequest._retry = true;
-
-      try {
-        await axios.post(`${BASE}/api/auth/refresh`, {}, { withCredentials: true });
-        return api(originalRequest);
-      } catch {
-        // Refresh failed — go to login, do NOT retry
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-    }
-
-    // For any other 401 (including on /refresh itself), just reject
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
