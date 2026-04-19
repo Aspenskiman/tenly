@@ -69,6 +69,11 @@ export default function WeeklyDigest() {
   }
 
   const doingWell = members.filter(m => hasThreeConsecutiveRises(m));
+  const holdingSteady = members.filter(m =>
+    !hasThreeConsecutiveDrops(m) &&
+    !hasThreeConsecutiveRises(m) &&
+    !(m.trend === 'down' && m.recentAvg !== null && m.recentAvg < 6)
+  );
 
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -95,7 +100,7 @@ export default function WeeklyDigest() {
         </div>
 
         {/* All good state */}
-        {needsAttention.length === 0 && doingWell.length === 0 && members.length > 0 && (
+        {needsAttention.length === 0 && doingWell.length === 0 && holdingSteady.length === 0 && members.length > 0 && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
             <p className="text-sm text-zinc-300 italic">Your team is in a good place this week.</p>
           </div>
@@ -110,6 +115,19 @@ export default function WeeklyDigest() {
             </div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
               {needsAttention.map(m => <DigestMemberRow key={m.id} member={m} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Holding Steady */}
+        {holdingSteady.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-zinc-500" />
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Holding Steady</p>
+            </div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+              {holdingSteady.map(m => <DigestMemberRow key={m.id} member={m} />)}
             </div>
           </div>
         )}
