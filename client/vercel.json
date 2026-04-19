@@ -1,6 +1,5 @@
 {
-  "github": {
-    "enabled": true,
-    "autoAlias": true
-  }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }
