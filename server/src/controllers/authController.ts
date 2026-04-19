@@ -35,14 +35,14 @@ function makeRefreshToken(payload: AuthPayload): string {
 function setTokenCookies(res: Response, accessToken: string, refreshToken: string) {
   res.cookie('access_token', accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'none',
     maxAge: 15 * 60 * 1000, // 15 min
   });
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'none',
     maxAge: REFRESH_EXPIRES_MS,
     path: '/api/auth/refresh',
   });
