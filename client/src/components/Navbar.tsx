@@ -17,6 +17,7 @@ export default function Navbar() {
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/roster', label: 'Roster' },
     { to: '/log', label: '+ Log' },
+    { to: '/digest', label: 'Digest' },
   ] : [];
 
   return (
