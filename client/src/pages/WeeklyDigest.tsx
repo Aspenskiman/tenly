@@ -10,17 +10,17 @@ function DigestMemberRow({ member }: { member: MemberWithTrend }) {
 
   return (
     <div
-      className="flex items-center gap-3 py-3.5 px-4 border-b border-zinc-800 last:border-0 cursor-pointer hover:bg-zinc-800/40 transition"
+      className="flex items-center gap-3 py-3.5 px-4 border-b border-[rgba(124,111,247,0.15)] last:border-0 cursor-pointer hover:bg-[#1A1A35]/40 transition"
       onClick={() => navigate(`/members/${member.id}`)}
     >
-      <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400 shrink-0">
+      <div className="w-8 h-8 rounded-full bg-[#1A1A35] flex items-center justify-center text-xs font-bold text-[rgba(180,180,255,0.5)] shrink-0">
         {member.name.charAt(0).toUpperCase()}
       </div>
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-white truncate">{member.name}</p>
         {score !== null && (
-          <p className="text-xs text-zinc-500 mt-0.5">{getZoneLabel(Math.round(score))}</p>
+          <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{getZoneLabel(Math.round(score))}</p>
         )}
       </div>
 
@@ -81,9 +81,9 @@ export default function WeeklyDigest() {
     return (
       <Layout>
         <div className="space-y-4 mt-4">
-          <div className="h-16 bg-zinc-800/50 rounded-2xl animate-pulse" />
-          <div className="h-40 bg-zinc-800/50 rounded-2xl animate-pulse" />
-          <div className="h-40 bg-zinc-800/50 rounded-2xl animate-pulse" />
+          <div className="h-16 bg-[#1A1A35]/50 rounded-2xl animate-pulse" />
+          <div className="h-40 bg-[#1A1A35]/50 rounded-2xl animate-pulse" />
+          <div className="h-40 bg-[#1A1A35]/50 rounded-2xl animate-pulse" />
         </div>
       </Layout>
     );
@@ -96,12 +96,12 @@ export default function WeeklyDigest() {
         {/* Header */}
         <div className="pt-1">
           <h1 className="text-xl font-black text-white">Weekly Digest</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">{today}</p>
+          <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{today}</p>
         </div>
 
         {/* All good state */}
         {needsAttention.length === 0 && doingWell.length === 0 && holdingSteady.length === 0 && members.length > 0 && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
+          <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl p-6 text-center">
             <p className="text-sm text-zinc-300 italic">Your team is in a good place this week.</p>
           </div>
         )}
@@ -111,9 +111,9 @@ export default function WeeklyDigest() {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-orange-400" />
-              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Needs Attention</p>
+              <p className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">Needs Attention</p>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+            <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl overflow-hidden">
               {needsAttention.map(m => <DigestMemberRow key={m.id} member={m} />)}
             </div>
           </div>
@@ -124,9 +124,9 @@ export default function WeeklyDigest() {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-zinc-500" />
-              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Holding Steady</p>
+              <p className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">Holding Steady</p>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+            <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl overflow-hidden">
               {holdingSteady.map(m => <DigestMemberRow key={m.id} member={m} />)}
             </div>
           </div>
@@ -136,17 +136,17 @@ export default function WeeklyDigest() {
         {doingWell.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Doing Well</p>
+              <div className="w-2 h-2 rounded-full bg-violet-500" />
+              <p className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">Doing Well</p>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+            <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl overflow-hidden">
               {doingWell.map(m => <DigestMemberRow key={m.id} member={m} />)}
             </div>
           </div>
         )}
 
         {members.length === 0 && (
-          <div className="text-center py-16 text-zinc-500 text-sm">
+          <div className="text-center py-16 text-[rgba(180,180,255,0.35)] text-sm">
             <p>No team members yet.</p>
             <button onClick={() => navigate('/roster')} className="mt-3 text-white underline">
               Go to Roster
@@ -156,7 +156,7 @@ export default function WeeklyDigest() {
 
         {/* Email note */}
         {members.length > 0 && (
-          <p className="text-xs text-zinc-600 text-center">
+          <p className="text-xs text-[rgba(180,180,255,0.25)] text-center">
             This digest is also sent to your email every Monday at 7am.
           </p>
         )}

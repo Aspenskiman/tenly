@@ -21,36 +21,71 @@ export default function Navbar() {
   ] : [];
 
   return (
-    <nav className="bg-[#111113] border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-6">
-        <Link to="/" className="text-xl font-black text-white tracking-tight">
+    <nav style={{
+      background: '#13132A',
+      borderBottom: '1px solid rgba(124,111,247,0.15)',
+      padding: '0 16px',
+      height: 52,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+        <Link to="/" style={{
+          fontSize: 18,
+          fontWeight: 900,
+          letterSpacing: '-0.03em',
+          color: '#A78BFA',
+          textDecoration: 'none',
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }}>
           tenly
         </Link>
+
         {isManager && (
-          <div className="hidden sm:flex items-center gap-1">
-            {navLinks.map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${
-                  location.pathname === link.to
-                    ? 'bg-zinc-800 text-white'
-                    : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {navLinks.map(link => {
+              const active = location.pathname === link.to;
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: 13,
+                    fontWeight: active ? 600 : 400,
+                    borderRadius: 8,
+                    textDecoration: 'none',
+                    background: active ? 'rgba(124,111,247,0.15)' : 'transparent',
+                    color: active ? '#A78BFA' : 'rgba(180,180,255,0.4)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
 
       {user && (
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-zinc-600 hidden sm:block">{user.name}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <span style={{ fontSize: 12, color: 'rgba(180,180,255,0.3)' }}>{user.name}</span>
           <button
             onClick={handleLogout}
-            className="text-xs text-zinc-500 hover:text-white transition"
+            style={{
+              fontSize: 12,
+              color: 'rgba(180,180,255,0.35)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              fontFamily: 'inherit',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(180,180,255,0.35)')}
           >
             Sign out
           </button>

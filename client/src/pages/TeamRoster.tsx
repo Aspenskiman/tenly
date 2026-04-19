@@ -21,16 +21,16 @@ function MemberRow({ member, onLog, onArchive }: {
   const lastDate = member.lastEntry?.interaction_date ?? null;
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-zinc-800 last:border-0">
+    <div className="flex items-center gap-3 py-3 border-b border-[rgba(124,111,247,0.15)] last:border-0">
       {/* Avatar */}
-      <div className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-bold text-zinc-400 shrink-0">
+      <div className="w-9 h-9 rounded-full bg-[#1A1A35] flex items-center justify-center text-sm font-bold text-[rgba(180,180,255,0.5)] shrink-0">
         {member.name.charAt(0).toUpperCase()}
       </div>
 
       {/* Name + last check-in */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-white truncate">{member.name}</p>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-[rgba(180,180,255,0.35)]">
           {lastDate ? `Last check-in ${formatDate(lastDate)}` : 'No check-ins yet'}
         </p>
       </div>
@@ -45,10 +45,10 @@ function MemberRow({ member, onLog, onArchive }: {
             </span>
           </div>
         ) : (
-          <span className="text-xs text-zinc-600">—</span>
+          <span className="text-xs text-[rgba(180,180,255,0.25)]">—</span>
         )}
         {member.recentAvg !== null && (
-          <span className="text-xs text-zinc-500 hidden sm:block">
+          <span className="text-xs text-[rgba(180,180,255,0.35)] hidden sm:block">
             avg {member.recentAvg.toFixed(1)}
           </span>
         )}
@@ -64,7 +64,7 @@ function MemberRow({ member, onLog, onArchive }: {
         </button>
         <button
           onClick={() => navigate(`/members/${member.id}`)}
-          className="px-2.5 py-1 text-xs border border-zinc-700 text-zinc-400 rounded-lg hover:border-zinc-500 hover:text-white transition"
+          className="px-2.5 py-1 text-xs border border-[rgba(124,111,247,0.2)] text-[rgba(180,180,255,0.5)] rounded-lg hover:border-zinc-500 hover:text-white transition"
         >
           View
         </button>
@@ -74,7 +74,7 @@ function MemberRow({ member, onLog, onArchive }: {
               onArchive(member.id);
             }
           }}
-          className="p-1 text-zinc-600 hover:text-orange-400 transition text-xs"
+          className="p-1 text-[rgba(180,180,255,0.25)] hover:text-orange-400 transition text-xs"
           title="Archive"
         >
           ×
@@ -99,14 +99,14 @@ function AddMemberModal({ teamId, onClose, onAdded }: {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm p-5 space-y-4">
+      <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl w-full max-w-sm p-5 space-y-4">
         <h3 className="text-base font-bold text-white">Add team member</h3>
         <div className="space-y-3">
           <input
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="Name *"
-            className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
+            className="w-full px-3 py-2.5 bg-[#1A1A35] border border-[rgba(124,111,247,0.2)] rounded-xl text-sm text-white placeholder:text-[rgba(180,180,255,0.35)] focus:outline-none focus:border-zinc-500"
             autoFocus
           />
           <input
@@ -114,13 +114,13 @@ function AddMemberModal({ teamId, onClose, onAdded }: {
             onChange={e => setEmail(e.target.value)}
             placeholder="Email (optional)"
             type="email"
-            className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
+            className="w-full px-3 py-2.5 bg-[#1A1A35] border border-[rgba(124,111,247,0.2)] rounded-xl text-sm text-white placeholder:text-[rgba(180,180,255,0.35)] focus:outline-none focus:border-zinc-500"
           />
         </div>
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 text-sm border border-zinc-700 text-zinc-400 rounded-xl hover:border-zinc-500 transition"
+            className="flex-1 py-2.5 text-sm border border-[rgba(124,111,247,0.2)] text-[rgba(180,180,255,0.5)] rounded-xl hover:border-zinc-500 transition"
           >
             Cancel
           </button>
@@ -165,7 +165,7 @@ export default function TeamRoster() {
       <Layout>
         <div className="space-y-3 mt-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-14 bg-zinc-800/50 rounded-xl animate-pulse" />
+            <div key={i} className="h-14 bg-[#1A1A35]/50 rounded-xl animate-pulse" />
           ))}
         </div>
       </Layout>
@@ -175,7 +175,7 @@ export default function TeamRoster() {
   if (!teams?.length) {
     return (
       <Layout>
-        <div className="text-center py-20 text-zinc-500">
+        <div className="text-center py-20 text-[rgba(180,180,255,0.35)]">
           <p className="text-lg font-semibold text-white">No teams yet</p>
           <p className="text-sm mt-1">Create your first team to get started.</p>
         </div>
@@ -193,7 +193,7 @@ export default function TeamRoster() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-black text-white">{team.name}</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{members.length} member{members.length !== 1 ? 's' : ''}</p>
           </div>
           <button
             onClick={() => setAddingToTeam(team.id)}
@@ -205,7 +205,7 @@ export default function TeamRoster() {
 
         {/* Members */}
         {members.length === 0 ? (
-          <div className="text-center py-16 text-zinc-500">
+          <div className="text-center py-16 text-[rgba(180,180,255,0.35)]">
             <p className="text-sm">No team members yet.</p>
             <button
               onClick={() => setAddingToTeam(team.id)}
@@ -215,7 +215,7 @@ export default function TeamRoster() {
             </button>
           </div>
         ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl px-4">
+          <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl px-4">
             {members.map(m => (
               <MemberRow
                 key={m.id}

@@ -73,16 +73,16 @@ export default function LogScore() {
         {/* Header */}
         <div>
           <h1 className="text-xl font-black text-white">Log a Score</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">After every 1:1. One number. Real signal.</p>
+          <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">After every 1:1. One number. Real signal.</p>
         </div>
 
         {/* Member selector */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Team member</label>
+          <label className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">Team member</label>
           <select
             value={selectedMemberId}
             onChange={e => { setSelectedMemberId(e.target.value); setScore(null); setNotes(''); }}
-            className="w-full px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-zinc-600 appearance-none"
+            className="w-full px-3 py-3 bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-xl text-white text-sm focus:outline-none focus:border-zinc-600 appearance-none"
           >
             <option value="">Select a member…</option>
             {members.map(m => (
@@ -94,15 +94,15 @@ export default function LogScore() {
         {/* Recent scores (last 3) */}
         {selectedMemberId && last3.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Recent</p>
+            <p className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider mb-2">Recent</p>
             <div className="flex gap-2">
               {last3.map((e, i) => (
                 <div
                   key={e.id}
-                  className={`flex-1 bg-zinc-900 border rounded-xl p-3 text-center ${i === 0 ? 'border-zinc-700' : 'border-zinc-800 opacity-50'}`}
+                  className={`flex-1 bg-[#13132A] border rounded-xl p-3 text-center ${i === 0 ? 'border-[rgba(124,111,247,0.2)]' : 'border-[rgba(124,111,247,0.15)] opacity-50'}`}
                 >
                   <span className={`text-2xl font-black ${getScoreTextColor(e.score)}`}>{e.score}</span>
-                  <p className="text-xs text-zinc-600 mt-0.5">{formatDate(e.interaction_date)}</p>
+                  <p className="text-xs text-[rgba(180,180,255,0.25)] mt-0.5">{formatDate(e.interaction_date)}</p>
                 </div>
               ))}
             </div>
@@ -112,7 +112,7 @@ export default function LogScore() {
         {/* Score grid */}
         {selectedMemberId && (
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            <label className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">
               What's their Tenly score?
             </label>
             <div className="grid grid-cols-5 gap-2">
@@ -126,7 +126,7 @@ export default function LogScore() {
                     className={`h-14 rounded-xl text-lg font-black transition-all border-2 ${
                       isSelected
                         ? 'border-transparent text-black scale-105'
-                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white bg-zinc-900'
+                        : 'border-[rgba(124,111,247,0.15)] text-[rgba(180,180,255,0.5)] hover:border-zinc-600 hover:text-white bg-[#13132A]'
                     }`}
                     style={isSelected ? { backgroundColor: color, borderColor: color } : {}}
                   >
@@ -148,16 +148,16 @@ export default function LogScore() {
         {/* Notes */}
         {score !== null && (
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Note (optional)</label>
+            <label className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">Note (optional)</label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               maxLength={500}
               rows={3}
               placeholder="What came up in the conversation?"
-              className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 resize-none"
+              className="w-full px-3 py-2.5 bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-xl text-sm text-white placeholder:text-[rgba(180,180,255,0.25)] focus:outline-none focus:border-zinc-600 resize-none"
             />
-            <p className="text-xs text-zinc-600 text-right">{notes.length}/500</p>
+            <p className="text-xs text-[rgba(180,180,255,0.25)] text-right">{notes.length}/500</p>
           </div>
         )}
 
@@ -178,7 +178,7 @@ export default function LogScore() {
         {/* Cancel */}
         <button
           onClick={() => navigate('/roster')}
-          className="w-full py-2 text-sm text-zinc-500 hover:text-white transition"
+          className="w-full py-2 text-sm text-[rgba(180,180,255,0.35)] hover:text-white transition"
         >
           Cancel
         </button>

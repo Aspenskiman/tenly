@@ -25,10 +25,10 @@ function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs shadow-xl">
-      <p className="text-zinc-400">{d.fullDate}</p>
+    <div className="bg-[#13132A] border border-[rgba(124,111,247,0.2)] rounded-xl px-3 py-2 text-xs shadow-xl">
+      <p className="text-[rgba(180,180,255,0.5)]">{d.fullDate}</p>
       <p className="text-white font-black text-base">{d.score}/10</p>
-      {d.notes && <p className="text-zinc-500 max-w-[160px] truncate mt-0.5">{d.notes}</p>}
+      {d.notes && <p className="text-[rgba(180,180,255,0.35)] max-w-[160px] truncate mt-0.5">{d.notes}</p>}
     </div>
   );
 }
@@ -82,9 +82,9 @@ export default function MemberDashboard() {
     return (
       <Layout>
         <div className="space-y-4 mt-4">
-          <div className="h-8 w-40 bg-zinc-800/50 rounded-lg animate-pulse" />
-          <div className="h-48 bg-zinc-800/50 rounded-2xl animate-pulse" />
-          <div className="h-32 bg-zinc-800/50 rounded-2xl animate-pulse" />
+          <div className="h-8 w-40 bg-[#1A1A35]/50 rounded-lg animate-pulse" />
+          <div className="h-48 bg-[#1A1A35]/50 rounded-2xl animate-pulse" />
+          <div className="h-32 bg-[#1A1A35]/50 rounded-2xl animate-pulse" />
         </div>
       </Layout>
     );
@@ -97,7 +97,7 @@ export default function MemberDashboard() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="text-zinc-500 hover:text-white transition text-sm"
+            className="text-[rgba(180,180,255,0.35)] hover:text-white transition text-sm"
           >
             ← Back
           </button>
@@ -105,7 +105,7 @@ export default function MemberDashboard() {
         </div>
 
         {/* Hero score */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center gap-5">
+        <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl p-5 flex items-center gap-5">
           <div className="relative">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center"
@@ -128,15 +128,15 @@ export default function MemberDashboard() {
                 {getTrendArrow(trend)}
               </span>
               {avg !== null && (
-                <span className="text-sm text-zinc-400">
+                <span className="text-sm text-[rgba(180,180,255,0.5)]">
                   Avg <span className="text-white font-bold">{avg.toFixed(1)}</span>
                 </span>
               )}
             </div>
             {latestScore && (
-              <p className="text-sm text-zinc-500 mt-0.5">{getZoneLabel(latestScore)}</p>
+              <p className="text-sm text-[rgba(180,180,255,0.35)] mt-0.5">{getZoneLabel(latestScore)}</p>
             )}
-            <p className="text-xs text-zinc-600 mt-1">{entries.length} check-ins</p>
+            <p className="text-xs text-[rgba(180,180,255,0.25)] mt-1">{entries.length} check-ins</p>
           </div>
           <button
             onClick={() => navigate(`/log?memberId=${memberId}&memberName=${encodeURIComponent(member?.name ?? '')}`)}
@@ -147,7 +147,7 @@ export default function MemberDashboard() {
         </div>
 
         {/* Range toggle */}
-        <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1">
+        <div className="flex gap-1 bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-xl p-1">
           {RANGES.map(r => (
             <button
               key={r.value}
@@ -155,7 +155,7 @@ export default function MemberDashboard() {
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition ${
                 range === r.value
                   ? 'bg-white text-black'
-                  : 'text-zinc-500 hover:text-white'
+                  : 'text-[rgba(180,180,255,0.35)] hover:text-white'
               }`}
             >
               {r.label}
@@ -165,7 +165,7 @@ export default function MemberDashboard() {
 
         {/* Chart */}
         {chartData.length > 1 ? (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl p-4">
             <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={chartData} margin={{ top: 8, right: 4, left: -20, bottom: 0 }}>
                 <defs>
@@ -194,11 +194,11 @@ export default function MemberDashboard() {
             </ResponsiveContainer>
           </div>
         ) : chartData.length === 1 ? (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center text-zinc-500 text-sm">
+          <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl p-5 text-center text-[rgba(180,180,255,0.35)] text-sm">
             Only 1 entry — log more to see trends.
           </div>
         ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center text-zinc-500 text-sm">
+          <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl p-5 text-center text-[rgba(180,180,255,0.35)] text-sm">
             No check-ins in this period.
           </div>
         )}
@@ -206,7 +206,7 @@ export default function MemberDashboard() {
         {/* Story So Far */}
         {storySoFar && (
           <div
-            className="rounded-2xl p-4 border-l-4 text-sm text-zinc-400 italic bg-zinc-900 border-zinc-800"
+            className="rounded-2xl p-4 border-l-4 text-sm text-[rgba(180,180,255,0.5)] italic bg-[#13132A] border-[rgba(124,111,247,0.15)]"
             style={{ borderLeftColor: latestScore ? getScoreColor(latestScore) : '#3f3f46' }}
           >
             {storySoFar}
@@ -216,8 +216,8 @@ export default function MemberDashboard() {
         {/* Check-in log */}
         {entries.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Check-in history</p>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl divide-y divide-zinc-800">
+            <p className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">Check-in history</p>
+            <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl divide-y divide-zinc-800">
               {[...entries].reverse().map(e => (
                 <div key={e.id} className="flex items-start gap-3 px-4 py-3">
                   <span
@@ -228,7 +228,7 @@ export default function MemberDashboard() {
                   </span>
                   <div className="flex-1 min-w-0">
                     {e.notes && <p className="text-sm text-zinc-300 truncate">{e.notes}</p>}
-                    <p className="text-xs text-zinc-600">{formatDateLong(e.interaction_date)}</p>
+                    <p className="text-xs text-[rgba(180,180,255,0.25)]">{formatDateLong(e.interaction_date)}</p>
                   </div>
                 </div>
               ))}
