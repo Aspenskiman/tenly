@@ -62,9 +62,13 @@ export default function WeeklyDigest() {
     (m.trend === 'down' && m.recentAvg !== null && m.recentAvg < 6) ||
     hasThreeConsecutiveDrops(m)
   );
-  const doingWell = members.filter(
-    m => m.trend === 'up' && (m.recentAvg !== null && m.recentAvg >= 6)
-  );
+  function hasThreeConsecutiveRises(member: MemberWithTrend): boolean {
+    const scores = member.entries.slice(-3).map(e => e.score);
+    if (scores.length < 3) return false;
+    return scores[1] > scores[0] && scores[2] > scores[1];
+  }
+
+  const doingWell = members.filter(m => hasThreeConsecutiveRises(m));
 
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
