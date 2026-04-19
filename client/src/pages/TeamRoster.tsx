@@ -93,19 +93,28 @@ function AddMemberModal({ teamId, onClose, onAdded, onUpgradeRequired }: {
 }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [isPending, setIsPending] = useState(false);
   const qc = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: () => addMember(teamId, { name: name.trim(), email: email.trim() || undefined }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['teams'] }); onAdded(); onClose(); },
-    onError: (err: any) => {
-      const errorCode = err?.response?.data?.error;
+
+  async function handleAdd() {
+    if (!name.trim()) return;
+    setIsPending(true);
+    try {
+      await addMember(teamId, { name: name.trim(), email: email.trim() || undefined });
+      qc.invalidateQueries({ queryKey: ['teams'] });
+      onAdded();
+      onClose();
+    } catch (err: any) {
       const status = err?.response?.status;
+      const errorCode = err?.response?.data?.error;
       if (status === 403 || errorCode === 'UPGRADE_REQUIRED') {
         onClose();
         onUpgradeRequired();
       }
-    },
-  });
+    } finally {
+      setIsPending(false);
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-4">
@@ -135,11 +144,11 @@ function AddMemberModal({ teamId, onClose, onAdded, onUpgradeRequired }: {
             Cancel
           </button>
           <button
-            onClick={() => mutation.mutate()}
-            disabled={!name.trim() || mutation.isPending}
+            onClick={handleAdd}
+            disabled={!name.trim() || isPending}
             className="flex-1 py-2.5 text-sm bg-white text-black font-semibold rounded-xl disabled:opacity-40 hover:bg-zinc-200 transition"
           >
-            {mutation.isPending ? 'Adding…' : 'Add member'}
+            {isPending ? 'Adding…' : 'Add member'}
           </button>
         </div>
       </div>
