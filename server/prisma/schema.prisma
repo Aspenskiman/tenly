@@ -12,12 +12,23 @@ enum Role {
   executive
 }
 
+enum Plan {
+  FREE
+  SOLO
+  TEAM
+  COMPANY
+  ENTERPRISE
+}
+
 model Company {
-  id         String   @id @default(uuid())
-  name       String
-  created_at DateTime @default(now())
-  users      User[]
-  teams      Team[]
+  id                     String    @id @default(uuid())
+  name                   String
+  plan                   Plan      @default(FREE)
+  stripe_customer_id     String?
+  stripe_subscription_id String?
+  created_at             DateTime  @default(now())
+  users                  User[]
+  teams                  Team[]
 }
 
 model User {

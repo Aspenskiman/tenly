@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
+import UpgradeModal from '../components/UpgradeModal';
 import {
   getMyTeams, getTeamSummary, addMember, archiveMember,
   Team, MemberWithTrend,
@@ -84,10 +85,11 @@ function MemberRow({ member, onLog, onArchive }: {
   );
 }
 
-function AddMemberModal({ teamId, onClose, onAdded }: {
+function AddMemberModal({ teamId, onClose, onAdded, onUpgradeRequired }: {
   teamId: string;
   onClose: () => void;
   onAdded: () => void;
+  onUpgradeRequired: () => void;
 }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -95,6 +97,12 @@ function AddMemberModal({ teamId, onClose, onAdded }: {
   const mutation = useMutation({
     mutationFn: () => addMember(teamId, { name: name.trim(), email: email.trim() || undefined }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['teams'] }); onAdded(); onClose(); },
+    onError: (err: any) => {
+      if (err?.response?.data?.error === 'UPGRADE_REQUIRED') {
+        onClose();
+        onUpgradeRequired();
+      }
+    },
   });
 
   return (
@@ -141,6 +149,7 @@ export default function TeamRoster() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [addingToTeam, setAddingToTeam] = useState<string | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const { data: teams, isLoading } = useQuery({
     queryKey: ['teams'],
@@ -242,8 +251,11 @@ export default function TeamRoster() {
           teamId={addingToTeam}
           onClose={() => setAddingToTeam(null)}
           onAdded={() => qc.invalidateQueries({ queryKey: ['team-summary', teamId] })}
+          onUpgradeRequired={() => setShowUpgrade(true)}
         />
       )}
+
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </Layout>
   );
 }
