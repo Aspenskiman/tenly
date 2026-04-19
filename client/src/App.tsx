@@ -8,6 +8,7 @@ import TeamRoster from './pages/TeamRoster';
 import LogScore from './pages/LogScore';
 import MemberDashboard from './pages/MemberDashboard';
 import ExecutiveDashboard from './pages/ExecutiveDashboard';
+import WeeklyDigest from './pages/WeeklyDigest';
 import BillingSuccess from './pages/BillingSuccess';
 
 function RootRedirect() {
