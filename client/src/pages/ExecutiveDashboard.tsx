@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import Layout from '../components/Layout';
 import { getCompanyData } from '../api/teams';
 import { getScoreColor, getScoreTextColor, getZoneLabel } from '../lib/scores';
@@ -50,72 +50,129 @@ function calcTrend(entries: Entry[]): 'up' | 'down' | 'stable' {
   return 'stable';
 }
 
-function TeamRow({ team }: { team: Team }) {
+function getWeeklySparkline(entries: Entry[]) {
+  const weeks: number[][] = Array.from({ length: 8 }, () => []);
+  const now = Date.now();
+  entries.forEach(e => {
+    const daysAgo = Math.floor((now - new Date(e.interaction_date).getTime()) / 86400000);
+    const weekIndex = Math.min(7, Math.floor(daysAgo / 7));
+    weeks[7 - weekIndex].push(e.score);
+  });
+  return weeks
+    .map(w => ({ s: w.length ? w.reduce((a, b) => a + b, 0) / w.length : null }))
+    .filter(w => w.s !== null);
+}
+
+function ScoreBar({ value, max = 10 }: { value: number; max?: number }) {
+  const pct = (value / max) * 100;
+  const color = getScoreColor(value);
+  return (
+    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+      <div
+        className="h-full rounded-full transition-all duration-700"
+        style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.7 }}
+      />
+    </div>
+  );
+}
+
+function TeamRow({ team, rank }: { team: Team; rank: number }) {
   const [expanded, setExpanded] = useState(false);
   const avg = teamAvg(team);
   const allEntries = team.members.flatMap(m => m.entries);
   const trend = calcTrend(allEntries);
+  const sparkline = getWeeklySparkline(allEntries);
+  const color = avg ? getScoreColor(avg) : '#3f3f46';
 
-  const trendArrow = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→';
-  const trendColor = trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-orange-400' : 'text-zinc-500';
-
-  const weeklyData = (() => {
-    const weeks: number[][] = Array.from({ length: 8 }, () => []);
-    const now = Date.now();
-    allEntries.forEach(e => {
-      const daysAgo = Math.floor((now - new Date(e.interaction_date).getTime()) / 86400000);
-      const weekIndex = Math.min(7, Math.floor(daysAgo / 7));
-      weeks[7 - weekIndex].push(e.score);
-    });
-    return weeks
-      .map(w => ({ s: w.length ? w.reduce((a, b) => a + b, 0) / w.length : null }))
-      .filter(w => w.s !== null);
-  })();
+  const trendSymbol = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '—';
+  const trendColor = trend === 'up' ? '#22C55E' : trend === 'down' ? '#F97316' : '#52525b';
 
   return (
-    <div className="border-b border-zinc-800 last:border-0">
+    <div
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+      className="last:border-0"
+    >
       <div
-        className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-zinc-800/30 transition"
-        onClick={() => setExpanded(e => !e)}
+        className="flex items-center gap-5 px-6 py-4 cursor-pointer transition-all duration-150"
+        style={{ background: expanded ? 'rgba(255,255,255,0.03)' : 'transparent' }}
+        onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}
+        onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        onClick={() => setExpanded(v => !v)}
       >
+        {/* Rank */}
+        <span
+          className="text-xs font-mono w-4 text-right shrink-0"
+          style={{ color: 'rgba(255,255,255,0.15)' }}
+        >
+          {rank}
+        </span>
+
+        {/* Team name + manager */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{team.name}</p>
+          <p className="text-sm font-medium text-white/90 truncate tracking-tight">{team.name}</p>
           {team.manager && (
-            <p className="text-xs text-zinc-600 mt-0.5">{team.manager.name}</p>
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              {team.manager.name}
+            </p>
           )}
         </div>
 
-        <div className="w-20 h-8 shrink-0">
-          {weeklyData.length >= 2 && (
+        {/* Sparkline */}
+        <div className="w-16 h-7 shrink-0 opacity-60">
+          {sparkline.length >= 2 && (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weeklyData}>
-                <Line
+              <AreaChart data={sparkline}>
+                <defs>
+                  <linearGradient id={`sg-${team.id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+                    <stop offset="100%" stopColor={color} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area
                   type="monotone"
                   dataKey="s"
-                  stroke={avg ? getScoreColor(avg) : '#52525b'}
+                  stroke={color}
                   strokeWidth={1.5}
+                  fill={`url(#sg-${team.id})`}
                   dot={false}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Score */}
+        <div className="flex items-baseline gap-1.5 shrink-0 w-16 justify-end">
           <span
-            className="text-2xl font-black"
-            style={{ color: avg ? getScoreColor(avg) : '#52525b' }}
+            className="text-xl font-black tabular-nums"
+            style={{ color, letterSpacing: '-0.02em' }}
           >
             {avg !== null ? avg.toFixed(1) : '—'}
           </span>
-          <span className={`text-sm font-bold ${trendColor}`}>{trendArrow}</span>
+          <span className="text-xs font-bold" style={{ color: trendColor }}>
+            {trendSymbol}
+          </span>
         </div>
 
-        <span className="text-zinc-600 text-xs">{expanded ? '▲' : '▼'}</span>
+        {/* Chevron */}
+        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>
+          {expanded ? '▲' : '▼'}
+        </span>
       </div>
 
+      {/* Score bar under row */}
+      {avg !== null && (
+        <div className="px-6 pb-1">
+          <ScoreBar value={avg} />
+        </div>
+      )}
+
+      {/* Expanded member list */}
       {expanded && (
-        <div className="px-5 pb-3">
+        <div
+          className="mx-6 mb-4 mt-2 rounded-xl overflow-hidden"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+        >
           {team.members
             .map(m => {
               const scores = m.entries.map(e => e.score);
@@ -123,15 +180,27 @@ function TeamRow({ team }: { team: Team }) {
               return { ...m, avg: a };
             })
             .sort((a, b) => (a.avg ?? 10) - (b.avg ?? 10))
-            .map(m => (
-              <div key={m.id} className="flex items-center justify-between py-2 border-b border-zinc-800/60 last:border-0">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">
+            .map((m, i, arr) => (
+              <div
+                key={m.id}
+                className="flex items-center justify-between px-4 py-2.5"
+                style={{
+                  borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}
+                  >
                     {m.name.charAt(0)}
                   </div>
-                  <span className="text-sm text-zinc-300">{m.name}</span>
+                  <span className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>{m.name}</span>
                 </div>
-                <span className={`text-sm font-bold ${m.avg !== null ? getScoreTextColor(Math.round(m.avg)) : 'text-zinc-600'}`}>
+                <span
+                  className="text-sm font-bold tabular-nums"
+                  style={{ color: m.avg !== null ? getScoreColor(m.avg) : '#52525b' }}
+                >
                   {m.avg !== null ? m.avg.toFixed(1) : '—'}
                 </span>
               </div>
@@ -152,20 +221,19 @@ export default function ExecutiveDashboard() {
 
   const teams = (rawTeams ?? []) as unknown as Team[];
   const avg = companyAvgCalc(teams);
+  const totalMembers = teams.flatMap(t => t.members).length;
 
-  const sortedTeams = [...teams].sort((a, b) => {
-    const aAvg = teamAvg(a) ?? 10;
-    const bAvg = teamAvg(b) ?? 10;
-    return aAvg - bAvg;
-  });
+  const sortedTeams = [...teams].sort((a, b) => (teamAvg(a) ?? 10) - (teamAvg(b) ?? 10));
+
+  const periodLabel = days === 7 ? 'Last 7 days' : days === 30 ? 'Last 30 days' : 'Last 90 days';
 
   if (isLoading) {
     return (
       <Layout>
-        <div className="space-y-4 mt-4">
-          <div className="h-48 bg-zinc-800/50 rounded-2xl animate-pulse" />
-          <div className="h-32 bg-zinc-800/50 rounded-2xl animate-pulse" />
-          <div className="h-32 bg-zinc-800/50 rounded-2xl animate-pulse" />
+        <div className="space-y-3 mt-6 max-w-lg mx-auto">
+          {[80, 48, 48, 48].map((h, i) => (
+            <div key={i} className="animate-pulse rounded-2xl" style={{ height: h, background: 'rgba(255,255,255,0.04)' }} />
+          ))}
         </div>
       </Layout>
     );
@@ -173,56 +241,144 @@ export default function ExecutiveDashboard() {
 
   return (
     <Layout>
-      <div className="max-w-lg mx-auto space-y-5 pb-20">
+      <div className="max-w-lg mx-auto pb-20 pt-2">
+
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1
+              className="text-base font-semibold tracking-tight"
+              style={{ color: 'rgba(255,255,255,0.9)' }}
+            >
+              Company Overview
+            </h1>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              {periodLabel} · {totalMembers} members · {teams.length} teams
+            </p>
+          </div>
+
+          {/* Period toggle */}
+          <div
+            className="flex gap-0.5 p-0.5 rounded-lg"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            {[7, 30, 90].map(d => (
+              <button
+                key={d}
+                onClick={() => setDays(d)}
+                className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-150"
+                style={{
+                  background: days === d ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  color: days === d ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)',
+                }}
+              >
+                {d === 7 ? '7d' : d === 30 ? '30d' : '90d'}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Company score hero */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Company Score</p>
-          <div
-            className="font-black leading-none"
-            style={{
-              fontSize: 96,
-              color: avg ? getScoreColor(avg) : '#52525b',
-              textShadow: avg ? `0 0 60px ${getScoreColor(avg)}40` : undefined,
-            }}
+        <div
+          className="rounded-2xl p-6 mb-5 relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          {/* Subtle glow behind score */}
+          {avg && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(ellipse 60% 80% at 50% 60%, ${getScoreColor(avg)}12 0%, transparent 70%)`,
+              }}
+            />
+          )}
+
+          <p
+            className="text-xs font-semibold uppercase tracking-widest mb-3"
+            style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.12em' }}
           >
-            {avg !== null ? avg.toFixed(1) : '—'}
-          </div>
-          {avg !== null && (
-            <p className="text-sm text-zinc-500 mt-2">{getZoneLabel(Math.round(avg))}</p>
-          )}
-          <p className="text-xs text-zinc-600 mt-1">
-            {teams.flatMap(t => t.members).length} members · {teams.length} teams
+            Employee Engagement Score
           </p>
-        </div>
 
-        {/* Range toggle */}
-        <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1">
-          {[7, 30, 90].map(d => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition ${
-                days === d ? 'bg-zinc-700 text-white' : 'text-zinc-500 hover:text-white'
-              }`}
-            >
-              {d === 7 ? '7d' : d === 30 ? '30d' : '90d'}
-            </button>
-          ))}
-        </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <div
+                className="font-black tabular-nums leading-none"
+                style={{
+                  fontSize: 80,
+                  color: avg ? getScoreColor(avg) : 'rgba(255,255,255,0.15)',
+                  letterSpacing: '-0.04em',
+                  textShadow: avg ? `0 0 80px ${getScoreColor(avg)}30` : undefined,
+                }}
+              >
+                {avg !== null ? avg.toFixed(1) : '—'}
+              </div>
+              <p
+                className="text-sm font-medium mt-1"
+                style={{ color: avg ? getScoreColor(avg) : 'rgba(255,255,255,0.2)', opacity: 0.8 }}
+              >
+                {avg !== null ? getZoneLabel(Math.round(avg)) : 'No data'}
+              </p>
+            </div>
 
-        {/* Team rows — sorted lowest first */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-zinc-800">
-            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Teams — Lowest First</p>
+            <div className="text-right pb-1">
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>out of</p>
+              <p
+                className="text-4xl font-black"
+                style={{ color: 'rgba(255,255,255,0.12)', letterSpacing: '-0.04em' }}
+              >
+                10
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* Team table */}
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.07)',
+          }}
+        >
+          {/* Table header */}
+          <div
+            className="flex items-center gap-5 px-6 py-3"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <span className="w-4" />
+            <span className="flex-1 text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em' }}>
+              Team
+            </span>
+            <span className="w-16 text-xs font-semibold uppercase tracking-widest text-right" style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em' }}>
+              8wk
+            </span>
+            <span className="w-16 text-xs font-semibold uppercase tracking-widest text-right" style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em' }}>
+              Score
+            </span>
+            <span className="w-3" />
+          </div>
+
           {sortedTeams.length === 0 && (
-            <p className="text-center text-zinc-600 text-sm py-8">No team data yet.</p>
+            <p className="text-center py-12 text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              No data for this period.
+            </p>
           )}
-          {sortedTeams.map(team => (
-            <TeamRow key={team.id} team={team} />
+
+          {sortedTeams.map((team, i) => (
+            <TeamRow key={team.id} team={team} rank={i + 1} />
           ))}
         </div>
+
+        <p
+          className="text-center text-xs mt-4"
+          style={{ color: 'rgba(255,255,255,0.15)' }}
+        >
+          Teams sorted lowest first — attention goes where it's needed
+        </p>
 
       </div>
     </Layout>
