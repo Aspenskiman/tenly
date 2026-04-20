@@ -87,7 +87,7 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
   const allEntries = team.members.flatMap(m => m.entries);
   const trend = calcTrend(allEntries);
   const sparkline = getWeeklySparkline(allEntries, 8);
-  const scoreColor = avg ? scoreColor(avg) : P.accent;
+  const teamColor = avg ? scoreColor(avg) : P.accent;
 
   const trendLabel = trend === 'up' ? '↑ Rising' : trend === 'down' ? '↓ Falling' : '→ Stable';
   const trendColor = trend === 'up' ? P.accentLt : trend === 'down' ? P.orange : P.textMute;
@@ -115,7 +115,7 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
       }}
     >
       {/* Top score accent bar */}
-      <div style={{ height: 3, background: `linear-gradient(90deg, ${scoreColor}, ${scoreColor}40)` }} />
+      <div style={{ height: 3, background: `linear-gradient(90deg, ${teamColor}, ${teamColor}40)` }} />
 
       {/* Card header */}
       <div style={{ padding: '16px 18px 12px' }}>
@@ -135,9 +135,9 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
           <div style={{ textAlign: 'right' }}>
             <p style={{
               fontSize: 36, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1,
-              color: scoreColor,
+              color: teamColor,
               fontFamily: "'DM Sans', sans-serif",
-              textShadow: `0 0 30px ${scoreColor}50`,
+              textShadow: `0 0 30px ${teamColor}50`,
             }}>
               {avg !== null ? avg.toFixed(1) : '—'}
             </p>
@@ -156,16 +156,16 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
             <AreaChart data={sparkline} margin={{ top: 5, right: 0, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id={`cg-${team.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={scoreColor} stopOpacity={0.35} />
-                  <stop offset="100%" stopColor={scoreColor} stopOpacity={0.02} />
+                  <stop offset="0%" stopColor={teamColor} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={teamColor} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <YAxis domain={[0, 10]} hide />
-              <Area type="monotone" dataKey="s" stroke={scoreColor} strokeWidth={2} fill={`url(#cg-${team.id})`} dot={false} />
+              <Area type="monotone" dataKey="s" stroke={teamColor} strokeWidth={2} fill={`url(#cg-${team.id})`} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div style={{ height: '100%', background: `linear-gradient(to top, ${scoreColor}08, transparent)` }} />
+          <div style={{ height: '100%', background: `linear-gradient(to top, ${teamColor}08, transparent)` }} />
         )}
       </div>
 
