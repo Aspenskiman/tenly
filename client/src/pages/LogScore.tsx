@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { getMyTeams, getTeamSummary, logEntry, getMemberEntries, MemberWithTrend } from '../api/teams';
-import { getScoreColor, getScoreTextColor, getScoreBorder, getZoneLabel, formatDate } from '../lib/scores';
+import { scoreColor, formatDate } from '../lib/scores';
 
 const SCORE_ZONES: Record<number, string> = {
   1: 'Really hard right now', 2: 'Going through a lot', 3: 'Going through a lot',
@@ -65,7 +65,7 @@ export default function LogScore() {
     },
   });
 
-  const scoreColor = score ? getScoreColor(score) : '#71717a';
+  const activeColor = score ? scoreColor(score) : '#71717a';
 
   return (
     <Layout>
@@ -101,7 +101,7 @@ export default function LogScore() {
                   key={e.id}
                   className={`flex-1 bg-[#13132A] border rounded-xl p-3 text-center ${i === 0 ? 'border-[rgba(124,111,247,0.2)]' : 'border-[rgba(124,111,247,0.15)] opacity-50'}`}
                 >
-                  <span className={`text-2xl font-black ${getScoreTextColor(e.score)}`}>{e.score}</span>
+                  <span className="text-2xl font-black" style={{ color: scoreColor(e.score) }}>{e.score}</span>
                   <p className="text-xs text-[rgba(180,180,255,0.25)] mt-0.5">{formatDate(e.interaction_date)}</p>
                 </div>
               ))}
@@ -117,7 +117,7 @@ export default function LogScore() {
             </label>
             <div className="grid grid-cols-5 gap-2">
               {[1,2,3,4,5,6,7,8,9,10].map(n => {
-                const color = getScoreColor(n);
+                const color = scoreColor(n);
                 const isSelected = score === n;
                 return (
                   <button
@@ -138,7 +138,7 @@ export default function LogScore() {
 
             {/* Zone label */}
             {score && (
-              <p className="text-xs text-center font-semibold" style={{ color: scoreColor }}>
+              <p className="text-xs text-center font-semibold" style={{ color: activeColor }}>
                 {SCORE_ZONES[score]}
               </p>
             )}
@@ -168,7 +168,7 @@ export default function LogScore() {
           className="w-full py-4 rounded-xl font-black text-base transition-all disabled:opacity-30"
           style={
             score !== null && selectedMemberId
-              ? { backgroundColor: scoreColor, color: '#000' }
+              ? { backgroundColor: activeColor, color: '#000' }
               : { backgroundColor: '#27272C', color: '#71717a' }
           }
         >

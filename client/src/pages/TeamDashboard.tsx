@@ -8,8 +8,7 @@ import {
 import Layout from '../components/Layout';
 import { getMyTeams, getTeamSummary, MemberWithTrend } from '../api/teams';
 import {
-  getScoreColor, getScoreTextColor, getTrendArrow, getTrendColor,
-  getZoneLabel, formatDate,
+  scoreColor, trendArrow, trendColor, scoreZoneLabel, formatDate,
 } from '../lib/scores';
 import { theme } from '../lib/theme';
 
@@ -231,14 +230,14 @@ function MemberRow({ member }: { member: MemberWithTrend }) {
       {/* Last 2 scores */}
       <div className="flex items-center gap-1.5 shrink-0">
         {prevScore !== null && (
-          <span className={`text-sm font-bold opacity-45 ${getScoreTextColor(prevScore)}`}>{prevScore}</span>
+          <span className="text-sm font-bold opacity-45" style={{ color: scoreColor(prevScore) }}>{prevScore}</span>
         )}
         {lastScore !== null && (
-          <span className={`text-base font-black ${getScoreTextColor(lastScore)}`}>{lastScore}</span>
+          <span className="text-base font-black" style={{ color: scoreColor(lastScore) }}>{lastScore}</span>
         )}
         {!lastScore && <span className="text-[rgba(180,180,255,0.25)] text-sm">—</span>}
-        <span className={`text-sm font-bold ml-1 ${getTrendColor(member.trend)}`}>
-          {getTrendArrow(member.trend)}
+        <span className="text-sm font-bold ml-1" style={{ color: trendColor(member.trend as 'up' | 'down' | 'stable') }}>
+          {trendArrow(member.trend as 'up' | 'down' | 'stable')}
         </span>
       </div>
 
@@ -250,7 +249,7 @@ function MemberRow({ member }: { member: MemberWithTrend }) {
               <Line
                 type="monotone"
                 dataKey="s"
-                stroke={lastScore ? getScoreColor(lastScore) : '#52525b'}
+                stroke={lastScore ? scoreColor(lastScore) : '#52525b'}
                 strokeWidth={1.5}
                 dot={false}
               />
@@ -313,15 +312,15 @@ export default function TeamDashboard() {
                   className="font-black leading-none"
                   style={{
                     fontSize: 64,
-                    color: teamAvg ? getScoreColor(teamAvg) : '#52525b',
-                    textShadow: teamAvg ? `0 0 40px ${getScoreColor(teamAvg)}50` : undefined,
+                    color: teamAvg ? scoreColor(teamAvg) : '#52525b',
+                    textShadow: teamAvg ? `0 0 40px ${scoreColor(teamAvg)}50` : undefined,
                   }}
                 >
                   {teamAvg !== null ? teamAvg.toFixed(1) : '—'}
                 </span>
               </div>
               {teamAvg && (
-                <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{getZoneLabel(Math.round(teamAvg))}</p>
+                <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{scoreZoneLabel(Math.round(teamAvg))}</p>
               )}
             </div>
             <div className="text-right">

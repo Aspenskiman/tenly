@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 import Layout from '../components/Layout';
 import { getCompanyData } from '../api/teams';
-import { getScoreColor, getZoneLabel } from '../lib/scores';
+import { scoreColor, scoreZoneLabel } from '../lib/scores';
 
 interface Entry { score: number; interaction_date: string; notes: string | null; }
 interface Member { id: string; name: string; entries: Entry[]; }
@@ -87,7 +87,7 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
   const allEntries = team.members.flatMap(m => m.entries);
   const trend = calcTrend(allEntries);
   const sparkline = getWeeklySparkline(allEntries, 8);
-  const scoreColor = avg ? getScoreColor(avg) : P.accent;
+  const scoreColor = avg ? scoreColor(avg) : P.accent;
 
   const trendLabel = trend === 'up' ? '↑ Rising' : trend === 'down' ? '↓ Falling' : '→ Stable';
   const trendColor = trend === 'up' ? P.accentLt : trend === 'down' ? P.orange : P.textMute;
@@ -145,7 +145,7 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
           </div>
         </div>
         <p style={{ fontSize: 11, color: P.textMute, marginTop: 8 }}>
-          {team.members.length} member{team.members.length !== 1 ? 's' : ''} · {getZoneLabel(Math.round(avg ?? 5))}
+          {team.members.length} member{team.members.length !== 1 ? 's' : ''} · {scoreZoneLabel(Math.round(avg ?? 5))}
         </p>
       </div>
 
@@ -208,11 +208,11 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: '50%',
-                  background: m.avg ? `${getScoreColor(m.avg)}18` : 'rgba(124,111,247,0.08)',
-                  border: `1px solid ${m.avg ? `${getScoreColor(m.avg)}35` : P.border}`,
+                  background: m.avg ? `${scoreColor(m.avg)}18` : 'rgba(124,111,247,0.08)',
+                  border: `1px solid ${m.avg ? `${scoreColor(m.avg)}35` : P.border}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11, fontWeight: 700,
-                  color: m.avg ? getScoreColor(m.avg) : P.textMute,
+                  color: m.avg ? scoreColor(m.avg) : P.textMute,
                 }}>
                   {m.name.charAt(0)}
                 </div>
@@ -220,7 +220,7 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
               </div>
               <span style={{
                 fontSize: 14, fontWeight: 800, letterSpacing: '-0.02em',
-                color: m.avg ? getScoreColor(m.avg) : P.textMute,
+                color: m.avg ? scoreColor(m.avg) : P.textMute,
                 fontFamily: "'DM Sans', sans-serif",
               }}>
                 {m.avg !== null ? m.avg.toFixed(1) : '—'}
@@ -248,7 +248,7 @@ export default function ExecutiveDashboard() {
   const totalMembers = teams.flatMap(t => t.members).length;
   const allEntries = teams.flatMap(t => t.members.flatMap(m => m.entries));
   const companySparkline = getWeeklySparkline(allEntries, 12);
-  const companyColor = avg ? getScoreColor(avg) : P.accent;
+  const companyColor = avg ? scoreColor(avg) : P.accent;
   const needsAttention = teams.filter(t => {
     const a = teamAvg(t);
     return (a !== null && a < 6) || calcTrend(t.members.flatMap(m => m.entries)) === 'down';
@@ -313,7 +313,7 @@ export default function ExecutiveDashboard() {
 
         {/* Stat strip */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 14, ...fadeIn(80) }}>
-          <StatCard label="Engagement Score" value={avg !== null ? avg.toFixed(1) : '—'} sub={avg !== null ? getZoneLabel(Math.round(avg)) : undefined} valueColor={companyColor} />
+          <StatCard label="Engagement Score" value={avg !== null ? avg.toFixed(1) : '—'} sub={avg !== null ? scoreZoneLabel(Math.round(avg)) : undefined} valueColor={companyColor} />
           <StatCard label="Total Members" value={String(totalMembers)} sub={`${teams.length} teams`} />
           <StatCard label="Period" value={days === 7 ? '7d' : days === 30 ? '30d' : '90d'} sub={periodLabel} />
           <StatCard label="Needs Attention" value={String(needsAttention)} sub={needsAttention === 0 ? 'All teams stable' : 'teams trending down'} valueColor={needsAttention > 0 ? P.orange : undefined} />

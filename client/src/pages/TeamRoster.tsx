@@ -7,10 +7,7 @@ import {
   getMyTeams, getTeamSummary, addMember, archiveMember,
   Team, MemberWithTrend,
 } from '../api/teams';
-import {
-  getScoreTextColor, getScoreBorder, getTrendArrow, getTrendColor,
-  getZoneLabel, formatDate,
-} from '../lib/scores';
+import { scoreColor, trendArrow, trendColor, formatDate } from '../lib/scores';
 
 function MemberRow({ member, onLog, onArchive }: {
   member: MemberWithTrend;
@@ -40,9 +37,9 @@ function MemberRow({ member, onLog, onArchive }: {
       <div className="flex items-center gap-2 shrink-0">
         {lastScore !== null ? (
           <div className={`flex items-center gap-1`}>
-            <span className={`text-lg font-black ${getScoreTextColor(lastScore)}`}>{lastScore}</span>
-            <span className={`text-xs font-bold ${getTrendColor(member.trend)}`}>
-              {getTrendArrow(member.trend)}
+            <span className="text-lg font-black" style={{ color: scoreColor(lastScore) }}>{lastScore}</span>
+            <span className="text-xs font-bold" style={{ color: trendColor(member.trend as 'up' | 'down' | 'stable') }}>
+              {trendArrow(member.trend as 'up' | 'down' | 'stable')}
             </span>
           </div>
         ) : (

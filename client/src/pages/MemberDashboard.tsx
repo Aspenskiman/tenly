@@ -8,8 +8,7 @@ import {
 import Layout from '../components/Layout';
 import { getMemberEntries, getMyTeams, getTeamSummary } from '../api/teams';
 import {
-  getScoreColor, getScoreTextColor, getTrendArrow, getTrendColor,
-  getZoneLabel, formatDate, formatDateLong,
+  scoreColor, trendArrow, trendColor, scoreZoneLabel, formatDate, formatDateLong,
 } from '../lib/scores';
 
 type Range = '7d' | '30d' | '90d' | '12mo';
@@ -74,7 +73,7 @@ export default function MemberDashboard() {
   const storySoFar = entries.length >= 4 && avg !== null ? (() => {
     const low = Math.min(...entries.map(e => e.score));
     const lowEntry = entries.find(e => e.score === low);
-    const zone = getZoneLabel(avg);
+    const zone = scoreZoneLabel(avg);
     return `In the last ${rangeObj.days} days, ${member?.name ?? 'this member'} has averaged ${avg.toFixed(1)} — currently in the ${zone} zone. ${entries.length} check-ins total. Lowest score was a ${low}${lowEntry ? ` on ${formatDate(lowEntry.interaction_date)}` : ''}.`;
   })() : null;
 
@@ -110,13 +109,13 @@ export default function MemberDashboard() {
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center"
               style={{
-                boxShadow: latestScore ? `0 0 32px ${getScoreColor(latestScore)}40` : undefined,
-                border: `2px solid ${latestScore ? getScoreColor(latestScore) : '#3f3f46'}`,
+                boxShadow: latestScore ? `0 0 32px ${scoreColor(latestScore)}40` : undefined,
+                border: `2px solid ${latestScore ? scoreColor(latestScore) : '#3f3f46'}`,
               }}
             >
               <span
                 className="text-4xl font-black"
-                style={{ color: latestScore ? getScoreColor(latestScore) : '#71717a' }}
+                style={{ color: latestScore ? scoreColor(latestScore) : '#71717a' }}
               >
                 {latestScore ?? '—'}
               </span>
@@ -124,8 +123,8 @@ export default function MemberDashboard() {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className={`text-2xl font-black ${getTrendColor(trend)}`}>
-                {getTrendArrow(trend)}
+              <span className="text-2xl font-black" style={{ color: trendColor(trend as 'up' | 'down' | 'stable') }}>
+                {trendArrow(trend as 'up' | 'down' | 'stable')}
               </span>
               {avg !== null && (
                 <span className="text-sm text-[rgba(180,180,255,0.5)]">
@@ -134,7 +133,7 @@ export default function MemberDashboard() {
               )}
             </div>
             {latestScore && (
-              <p className="text-sm text-[rgba(180,180,255,0.35)] mt-0.5">{getZoneLabel(latestScore)}</p>
+              <p className="text-sm text-[rgba(180,180,255,0.35)] mt-0.5">{scoreZoneLabel(latestScore)}</p>
             )}
             <p className="text-xs text-[rgba(180,180,255,0.25)] mt-1">{entries.length} check-ins</p>
           </div>
@@ -170,8 +169,8 @@ export default function MemberDashboard() {
               <AreaChart data={chartData} margin={{ top: 8, right: 4, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={latestScore ? getScoreColor(latestScore) : '#22C55E'} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={latestScore ? getScoreColor(latestScore) : '#22C55E'} stopOpacity={0} />
+                    <stop offset="5%" stopColor={latestScore ? scoreColor(latestScore) : '#818CF8'} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={latestScore ? scoreColor(latestScore) : '#818CF8'} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272C" />
@@ -184,10 +183,10 @@ export default function MemberDashboard() {
                 <Area
                   type="monotone"
                   dataKey="score"
-                  stroke={latestScore ? getScoreColor(latestScore) : '#22C55E'}
+                  stroke={latestScore ? scoreColor(latestScore) : '#818CF8'}
                   strokeWidth={2}
                   fill="url(#scoreGrad)"
-                  dot={{ fill: latestScore ? getScoreColor(latestScore) : '#22C55E', r: 3, strokeWidth: 0 }}
+                  dot={{ fill: latestScore ? scoreColor(latestScore) : '#818CF8', r: 3, strokeWidth: 0 }}
                   activeDot={{ r: 5, strokeWidth: 0 }}
                 />
               </AreaChart>
@@ -207,7 +206,7 @@ export default function MemberDashboard() {
         {storySoFar && (
           <div
             className="rounded-2xl p-4 border-l-4 text-sm text-[rgba(180,180,255,0.5)] italic bg-[#13132A] border-[rgba(124,111,247,0.15)]"
-            style={{ borderLeftColor: latestScore ? getScoreColor(latestScore) : '#3f3f46' }}
+            style={{ borderLeftColor: latestScore ? scoreColor(latestScore) : '#3f3f46' }}
           >
             {storySoFar}
           </div>
@@ -222,7 +221,7 @@ export default function MemberDashboard() {
                 <div key={e.id} className="flex items-start gap-3 px-4 py-3">
                   <span
                     className="text-lg font-black shrink-0 w-8 text-center"
-                    style={{ color: getScoreColor(e.score) }}
+                    style={{ color: scoreColor(e.score) }}
                   >
                     {e.score}
                   </span>

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { getMyTeams, getTeamSummary, MemberWithTrend } from '../api/teams';
-import { getScoreTextColor, getTrendArrow, getTrendColor, getZoneLabel } from '../lib/scores';
+import { scoreColor, trendArrow, trendColor, scoreZoneLabel } from '../lib/scores';
 
 function DigestMemberRow({ member }: { member: MemberWithTrend }) {
   const navigate = useNavigate();
@@ -20,18 +20,18 @@ function DigestMemberRow({ member }: { member: MemberWithTrend }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-white truncate">{member.name}</p>
         {score !== null && (
-          <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{getZoneLabel(Math.round(score))}</p>
+          <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{scoreZoneLabel(Math.round(score))}</p>
         )}
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
         {score !== null && (
-          <span className={`text-lg font-black ${getScoreTextColor(Math.round(score))}`}>
+          <span className="text-lg font-black" style={{ color: scoreColor(Math.round(score)) }}>
             {score.toFixed(1)}
           </span>
         )}
-        <span className={`text-sm font-bold ${getTrendColor(member.trend)}`}>
-          {getTrendArrow(member.trend)}
+        <span className="text-sm font-bold" style={{ color: trendColor(member.trend as 'up' | 'down' | 'stable') }}>
+          {trendArrow(member.trend as 'up' | 'down' | 'stable')}
         </span>
       </div>
     </div>
