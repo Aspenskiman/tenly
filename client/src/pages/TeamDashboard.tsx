@@ -11,7 +11,6 @@ import {
   getScoreColor, getScoreTextColor, getTrendArrow, getTrendColor,
   getZoneLabel, formatDate,
 } from '../lib/scores';
-import { theme } from '../lib/theme';
 
 const CHART_COLORS = ['#A78BFA','#34D399','#60A5FA','#F472B6','#FBBF24','#F87171','#38BDF8','#A3E635'];
 
@@ -181,7 +180,7 @@ function TeamTrendChart({ members, teamAvg }: { members: MemberWithTrend[]; team
   if (!members.length) return null;
 
   return (
-    <div style={{ backgroundColor: '#111113', borderRadius: 12, border: `1px solid ${theme.border}` }}>
+    <div style={{ backgroundColor: '#111113', borderRadius: 12, border: '1px solid rgba(124,111,247,0.15)' }}>
       <div style={{ height: 200, padding: '16px 12px 8px 4px' }}>
         <canvas ref={canvasRef} />
       </div>
@@ -342,7 +341,7 @@ export default function TeamDashboard() {
             {/* Range toggle */}
             <div
               className="flex gap-1 rounded-xl p-1"
-              style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
+              style={{ backgroundColor: '#1A1A35', border: '1px solid rgba(124,111,247,0.15)' }}
             >
               {RANGES.map(r => (
                 <button
@@ -352,7 +351,7 @@ export default function TeamDashboard() {
                   style={
                     range === r.value
                       ? { backgroundColor: 'white', color: 'black' }
-                      : { color: theme.textMid }
+                      : { color: 'rgba(180,180,255,0.55)' }
                   }
                 >
                   {r.label}
