@@ -11,6 +11,7 @@ import {
   getScoreColor, getScoreTextColor, getTrendArrow, getTrendColor,
   getZoneLabel, formatDate,
 } from '../lib/scores';
+import { theme } from '../lib/theme';
 
 const CHART_COLORS = ['#A78BFA','#34D399','#60A5FA','#F472B6','#FBBF24','#F87171','#38BDF8','#A3E635'];
 
