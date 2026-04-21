@@ -16,8 +16,8 @@ export async function createPreAuthCheckout(req: Request, res: Response): Promis
       teamName: string;
     };
 
-    if (tier !== 'team' && tier !== 'enterprise') {
-      res.status(400).json({ error: 'tier must be "team" or "enterprise"' });
+    if (tier !== 'growth' && tier !== 'team') {
+      res.status(400).json({ error: 'tier must be "growth" or "team"' });
       return;
     }
     if (!companyName?.trim()) {
@@ -35,7 +35,7 @@ export async function createPreAuthCheckout(req: Request, res: Response): Promis
       'https://tenly-five.vercel.app';
 
     const session = await createPreAuthCheckoutSession({
-      tier: tier as 'team' | 'enterprise',
+      tier: tier as 'growth' | 'team',
       companyName: companyName.trim(),
       teamName: teamName.trim(),
       origin,

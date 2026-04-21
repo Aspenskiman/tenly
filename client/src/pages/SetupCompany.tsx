@@ -12,26 +12,26 @@ const TIERS: {
   features: string[];
 }[] = [
   {
-    id: 'team',
-    name: 'Team',
-    price: '$40',
+    id: 'growth',
+    name: 'Growth',
+    price: '$49',
     priceNote: '/month',
-    limit: 'Up to 150 members',
-    features: ['Unlimited team members', 'Weekly digest email', 'Score history & trends'],
+    limit: 'Up to 75 members',
+    features: ['Unlimited teams', 'Unlimited managers', 'Weekly digest email', 'Score history & trends'],
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: '$75',
+    id: 'team',
+    name: 'Team',
+    price: '$99',
     priceNote: '/month',
-    limit: 'Up to 500 members',
-    features: ['Everything in Team', 'Executive dashboard', 'Company-wide analytics'],
+    limit: 'Up to 150 members',
+    features: ['Unlimited teams', 'Unlimited managers', 'Executive dashboard', 'Company-wide analytics'],
   },
 ];
 
 export default function SetupCompany() {
   const navigate = useNavigate();
-  const [selectedTier, setSelectedTier] = useState<PreAuthTier>('team');
+  const [selectedTier, setSelectedTier] = useState<PreAuthTier>('growth');
   const [companyName, setCompanyName] = useState('');
   const [teamName, setTeamName] = useState('');
   const [loading, setLoading] = useState(false);

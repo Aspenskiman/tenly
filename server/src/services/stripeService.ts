@@ -111,13 +111,13 @@ export async function createPreAuthCheckoutSession({
   teamName,
   origin,
 }: {
-  tier: 'team' | 'enterprise';
+  tier: 'growth' | 'team';
   companyName: string;
   teamName: string;
   origin: string;
 }) {
-  const unitAmount = tier === 'team' ? 4000 : 7500; // $40 / $75 in cents
-  const productName = tier === 'team' ? 'Tenly Team' : 'Tenly Enterprise';
+  const unitAmount = tier === 'growth' ? 4900 : 9900; // $49 / $99 in cents
+  const productName = tier === 'growth' ? 'Tenly Growth' : 'Tenly Team';
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',

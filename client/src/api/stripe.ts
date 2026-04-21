@@ -1,6 +1,6 @@
 import api from './client';
 
-export type PreAuthTier = 'team' | 'enterprise';
+export type PreAuthTier = 'growth' | 'team';
 
 export interface PreAuthSession {
   tier: string;
