@@ -133,7 +133,7 @@ export async function createPreAuthCheckoutSession({
       },
     ],
     success_url: `${origin}/register?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/login`,
+    cancel_url: `${origin}/setup-company`,
     metadata: { tier, companyName, teamName },
   });
 
