@@ -15,6 +15,8 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [teamName, setTeamName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -58,8 +60,8 @@ export default function Register() {
       name: name.trim(),
       email: email.trim(),
       password,
-      companyName: session.companyName,
-      teamName: session.teamName,
+      companyName: companyName.trim(),
+      teamName: teamName.trim(),
       tier: session.tier,
       sessionId,
     };
@@ -106,7 +108,7 @@ export default function Register() {
           <div className="text-4xl">✓</div>
           <h1 className="text-2xl font-black text-white">Account created!</h1>
           <p className="text-sm" style={{ color: theme.textMid }}>
-            Welcome to Tenly, {name}. Your workspace for <strong style={{ color: 'white' }}>{session?.companyName}</strong> is ready.
+            Welcome to Tenly, {name}. Your workspace for <strong style={{ color: 'white' }}>{companyName}</strong> is ready.
           </p>
           <button
             onClick={() => navigate('/login')}
@@ -128,20 +130,13 @@ export default function Register() {
           <p className="text-sm" style={{ color: theme.textMid }}>Payment confirmed. Create your account.</p>
         </div>
 
-        {/* Session summary (read-only) */}
-        <div
-          className="rounded-xl px-4 py-3 mb-5 flex items-center justify-between"
-          style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
-        >
-          <div>
-            <p className="text-xs font-semibold text-white">{session?.companyName}</p>
-            <p className="text-xs" style={{ color: theme.textMute }}>Team: {session?.teamName}</p>
-          </div>
+        {/* Tier badge */}
+        <div className="flex justify-center mb-5">
           <span
-            className="text-xs font-bold px-2 py-0.5 rounded-full capitalize"
+            className="text-xs font-bold px-3 py-1 rounded-full capitalize"
             style={{ backgroundColor: `${theme.accent}20`, color: theme.accentLt, border: `1px solid ${theme.accent}40` }}
           >
-            {session?.tier}
+            {session?.tier} plan
           </span>
         </div>
 
@@ -149,6 +144,35 @@ export default function Register() {
           <h2 className="text-xl font-semibold text-white mb-6">Create your account</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="creator-company" className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Company Name</label>
+              <input
+                id="creator-company"
+                type="text"
+                autoComplete="organization"
+                value={companyName}
+                onChange={e => setCompanyName(e.target.value)}
+                required
+                placeholder="Acme Corp"
+                className="w-full px-3 py-2.5 rounded-xl text-white text-sm focus:outline-none"
+                style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="creator-team" className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Your Team Name</label>
+              <input
+                id="creator-team"
+                type="text"
+                value={teamName}
+                onChange={e => setTeamName(e.target.value)}
+                required
+                placeholder="Product Team"
+                className="w-full px-3 py-2.5 rounded-xl text-white text-sm focus:outline-none"
+                style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
+              />
+            </div>
+
             <div>
               <label htmlFor="creator-name" className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Your Name</label>
               <input

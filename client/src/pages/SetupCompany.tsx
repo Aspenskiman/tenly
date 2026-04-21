@@ -32,20 +32,14 @@ const TIERS: {
 export default function SetupCompany() {
   const navigate = useNavigate();
   const [selectedTier, setSelectedTier] = useState<PreAuthTier>('growth');
-  const [companyName, setCompanyName] = useState('');
-  const [teamName, setTeamName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function handleContinue() {
-    if (!companyName.trim() || !teamName.trim()) {
-      setError('Please fill in both Company Name and Team Name.');
-      return;
-    }
     setError('');
     setLoading(true);
     try {
-      const { url } = await createPreAuthCheckoutSession(selectedTier, companyName.trim(), teamName.trim());
+      const { url } = await createPreAuthCheckoutSession(selectedTier);
       window.location.href = url;
     } catch {
       setError('Failed to start checkout. Please try again.');
@@ -104,46 +98,20 @@ export default function SetupCompany() {
           })}
         </div>
 
-        {/* Inputs */}
-        <div className="rounded-2xl p-6 space-y-4" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}>
-          <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Company Name</label>
-            <input
-              type="text"
-              value={companyName}
-              onChange={e => setCompanyName(e.target.value)}
-              placeholder="Acme Corp"
-              className="w-full px-3 py-2.5 rounded-xl text-white text-sm focus:outline-none"
-              style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Your Team Name</label>
-            <input
-              type="text"
-              value={teamName}
-              onChange={e => setTeamName(e.target.value)}
-              placeholder="Product Team"
-              className="w-full px-3 py-2.5 rounded-xl text-white text-sm focus:outline-none"
-              style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
-            />
-          </div>
+        {error && (
+          <p className="text-sm px-3 py-2 rounded-xl mb-3" style={{ color: '#EF4444', backgroundColor: theme.card, border: `1px solid rgba(239,68,68,0.2)` }}>
+            {error}
+          </p>
+        )}
 
-          {error && (
-            <p className="text-sm px-3 py-2 rounded-xl" style={{ color: '#EF4444', backgroundColor: theme.card, border: `1px solid rgba(239,68,68,0.2)` }}>
-              {error}
-            </p>
-          )}
-
-          <button
-            onClick={handleContinue}
-            disabled={loading}
-            className="w-full py-2.5 rounded-xl font-semibold text-sm transition disabled:opacity-50"
-            style={{ backgroundColor: theme.accent, color: '#FFFFFF' }}
-          >
-            {loading ? 'Redirecting to payment…' : 'Continue to Payment →'}
-          </button>
-        </div>
+        <button
+          onClick={handleContinue}
+          disabled={loading}
+          className="w-full py-2.5 rounded-xl font-semibold text-sm transition disabled:opacity-50"
+          style={{ backgroundColor: theme.accent, color: '#FFFFFF' }}
+        >
+          {loading ? 'Redirecting to payment…' : 'Continue to Payment →'}
+        </button>
       </div>
     </div>
   );

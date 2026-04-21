@@ -107,13 +107,9 @@ export async function handleWebhook(payload: Buffer, signature: string) {
 
 export async function createPreAuthCheckoutSession({
   tier,
-  companyName,
-  teamName,
   origin,
 }: {
   tier: 'growth' | 'team';
-  companyName: string;
-  teamName: string;
   origin: string;
 }) {
   const unitAmount = tier === 'growth' ? 4900 : 9900; // $49 / $99 in cents
@@ -134,7 +130,7 @@ export async function createPreAuthCheckoutSession({
     ],
     success_url: `${origin}/register?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/setup-company`,
-    metadata: { tier, companyName, teamName },
+    metadata: { tier },
   });
 
   return session;
@@ -151,8 +147,6 @@ export async function getPreAuthSession(sessionId: string) {
 
   return {
     tier: meta.tier ?? '',
-    companyName: meta.companyName ?? '',
-    teamName: meta.teamName ?? '',
     customerEmail,
     paid: session.payment_status === 'paid',
   };

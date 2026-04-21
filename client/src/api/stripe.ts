@@ -4,22 +4,14 @@ export type PreAuthTier = 'growth' | 'team';
 
 export interface PreAuthSession {
   tier: string;
-  companyName: string;
-  teamName: string;
   customerEmail: string;
   paid: boolean;
 }
 
 export async function createPreAuthCheckoutSession(
-  tier: PreAuthTier,
-  companyName: string,
-  teamName: string
+  tier: PreAuthTier
 ): Promise<{ url: string }> {
-  const res = await api.post('/stripe/create-checkout-session', {
-    tier,
-    companyName,
-    teamName,
-  });
+  const res = await api.post('/stripe/create-checkout-session', { tier });
   return res.data;
 }
 

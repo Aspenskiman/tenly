@@ -10,22 +10,10 @@ const prisma = new PrismaClient();
 
 export async function createPreAuthCheckout(req: Request, res: Response): Promise<void> {
   try {
-    const { tier, companyName, teamName } = req.body as {
-      tier: string;
-      companyName: string;
-      teamName: string;
-    };
+    const { tier } = req.body as { tier: string };
 
     if (tier !== 'growth' && tier !== 'team') {
       res.status(400).json({ error: 'tier must be "growth" or "team"' });
-      return;
-    }
-    if (!companyName?.trim()) {
-      res.status(400).json({ error: 'companyName is required' });
-      return;
-    }
-    if (!teamName?.trim()) {
-      res.status(400).json({ error: 'teamName is required' });
       return;
     }
 
@@ -36,8 +24,6 @@ export async function createPreAuthCheckout(req: Request, res: Response): Promis
 
     const session = await createPreAuthCheckoutSession({
       tier: tier as 'growth' | 'team',
-      companyName: companyName.trim(),
-      teamName: teamName.trim(),
       origin,
     });
 
