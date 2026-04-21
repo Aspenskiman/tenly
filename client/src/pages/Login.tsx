@@ -19,7 +19,9 @@ export default function Login() {
     try {
       const user = await login(email, password);
       setUser(user);
-      navigate(user.role === 'executive' ? '/executive' : '/dashboard');
+      if (user.role === 'executive') navigate('/executive');
+      else if (user.role === 'creator') navigate('/creator-dashboard');
+      else navigate('/dashboard');
     } catch {
       setError('Invalid email or password.');
     } finally {

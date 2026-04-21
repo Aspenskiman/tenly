@@ -19,17 +19,17 @@ const logEntrySchema = z.object({
   interaction_date: z.string().datetime().or(z.string().date()),
 });
 
-// Manager routes
-router.get('/my', requireAuth, requireRole('manager'), getMyTeams);
+// Manager + creator routes
+router.get('/my', requireAuth, requireRole('manager', 'creator'), getMyTeams);
 router.post('/', requireAuth, requireRole('manager', 'creator'), validate(createTeamSchema), createTeam);
-router.get('/:teamId/summary', requireAuth, requireRole('manager'), getTeamSummary);
+router.get('/:teamId/summary', requireAuth, requireRole('manager', 'creator'), getTeamSummary);
 
 // Members
-router.post('/:teamId/members', requireAuth, requireRole('manager'), validate(addMemberSchema), addMember);
-router.delete('/members/:memberId', requireAuth, requireRole('manager'), archiveMember);
+router.post('/:teamId/members', requireAuth, requireRole('manager', 'creator'), validate(addMemberSchema), addMember);
+router.delete('/members/:memberId', requireAuth, requireRole('manager', 'creator'), archiveMember);
 
 // Entries
-router.post('/members/:memberId/entries', requireAuth, requireRole('manager'), validate(logEntrySchema), logEntry);
+router.post('/members/:memberId/entries', requireAuth, requireRole('manager', 'creator'), validate(logEntrySchema), logEntry);
 router.get('/members/:memberId/entries', requireAuth, getMemberEntries);
 
 export default router;
