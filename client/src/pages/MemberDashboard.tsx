@@ -52,6 +52,7 @@ export default function MemberDashboard() {
     queryKey: ['team-summary', teamId],
     queryFn: () => getTeamSummary(teamId!),
     enabled: !!teamId,
+    staleTime: 0,
   });
   const member = summary?.members.find(m => m.id === memberId);
 

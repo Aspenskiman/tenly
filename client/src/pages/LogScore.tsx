@@ -65,7 +65,7 @@ export default function LogScore() {
       interaction_date: new Date().toISOString(),
     }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['team-summary', teamId] });
+      qc.invalidateQueries({ queryKey: ['team-summary'] });
       qc.invalidateQueries({ queryKey: ['entries', selectedMemberId] });
       setSaved(true);
       setScore(null);
