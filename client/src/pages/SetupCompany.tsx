@@ -16,7 +16,7 @@ const TIERS: {
     name: 'Team',
     price: '$40',
     priceNote: '/month',
-    limit: 'Up to 10 teams',
+    limit: 'Up to 150 members',
     features: ['Unlimited team members', 'Weekly digest email', 'Score history & trends'],
   },
   {
@@ -24,7 +24,7 @@ const TIERS: {
     name: 'Enterprise',
     price: '$75',
     priceNote: '/month',
-    limit: 'Up to 20 teams',
+    limit: 'Up to 500 members',
     features: ['Everything in Team', 'Executive dashboard', 'Company-wide analytics'],
   },
 ];
