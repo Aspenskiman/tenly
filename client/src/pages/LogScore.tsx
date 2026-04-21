@@ -12,6 +12,19 @@ const SCORE_ZONES: Record<number, string> = {
   9: 'Firing on all cylinders', 10: 'Firing on all cylinders',
 };
 
+const SUGGESTIONS: Record<number, string> = {
+  1: "You're already showing up for them. Is there anything they need right now?",
+  2: "What's been the hardest part of this week?",
+  3: "What would make next week even slightly better?",
+  4: "What's one thing that would help you feel more supported right now?",
+  5: "What would have made this week a 5 instead of a 4?",
+  6: "What kept you from a 7 this week?",
+  7: "What's been working well for you lately?",
+  8: "What's been energizing you this week?",
+  9: "What made this week so strong?",
+  10: "What made this a perfect week — what do we protect?",
+};
+
 export default function LogScore() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -136,11 +149,16 @@ export default function LogScore() {
               })}
             </div>
 
-            {/* Zone label */}
+            {/* Zone label + suggestion */}
             {score && (
-              <p className="text-xs text-center font-semibold" style={{ color: activeColor }}>
-                {SCORE_ZONES[score]}
-              </p>
+              <>
+                <p className="text-xs text-center font-semibold" style={{ color: activeColor }}>
+                  {SCORE_ZONES[score]}
+                </p>
+                <p className="text-sm italic text-zinc-400 text-center mt-1">
+                  {SUGGESTIONS[score]}
+                </p>
+              </>
             )}
           </div>
         )}
