@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { getMyTeams, getAllTeams, createTeam } from '../controllers/teamController.js';
+import { getMyTeams, getAllTeams, createTeam, updateTeam } from '../controllers/teamController.js';
 import { addMember, archiveMember } from '../controllers/memberController.js';
 import { logEntry, getMemberEntries, getTeamSummary } from '../controllers/entryController.js';
 
@@ -22,6 +22,7 @@ const logEntrySchema = z.object({
 // Manager + creator routes
 router.get('/my', requireAuth, requireRole('manager', 'creator'), getMyTeams);
 router.post('/', requireAuth, requireRole('manager', 'creator'), validate(createTeamSchema), createTeam);
+router.patch('/:id', requireAuth, requireRole('creator'), updateTeam);
 router.get('/:teamId/summary', requireAuth, requireRole('manager', 'creator'), getTeamSummary);
 
 // Members

@@ -49,6 +49,37 @@ export async function getAllTeams(): Promise<Team[]> {
   return data.teams;
 }
 
+export async function patchTeam(
+  teamId: string,
+  updates: { name?: string; managerId?: string }
+): Promise<Team> {
+  const { data } = await api.patch(`/teams/${teamId}`, updates);
+  return data.team;
+}
+
+export interface CompanyStats {
+  teamCount: number;
+  managerCount: number;
+  memberCount: number;
+  pendingInviteCount: number;
+}
+
+export interface CompanyManager {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export async function getCompanyStats(): Promise<CompanyStats> {
+  const { data } = await api.get('/company/stats');
+  return data;
+}
+
+export async function getCompanyManagers(): Promise<CompanyManager[]> {
+  const { data } = await api.get('/company/managers');
+  return data.managers;
+}
+
 export async function getTeamSummary(teamId: string, days = 90): Promise<TeamSummary> {
   const { data } = await api.get(`/teams/${teamId}/summary?days=${days}`);
   return data.team;
