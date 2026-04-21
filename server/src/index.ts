@@ -7,6 +7,7 @@ import teamRoutes from './routes/teams.js';
 import executiveRoutes from './routes/executive.js';
 import billingRoutes from './routes/billing.js';
 import stripeRoutes from './routes/stripe.js';
+import inviteRoutes from './routes/invites.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startScheduler } from './services/schedulerService.js';
 
@@ -52,6 +53,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/company', executiveRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/stripe', stripeRoutes);
+app.use('/api/invites', inviteRoutes);
 
 app.use(errorHandler);
 

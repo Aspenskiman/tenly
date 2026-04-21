@@ -12,6 +12,7 @@ import WeeklyDigest from './pages/WeeklyDigest';
 import BillingSuccess from './pages/BillingSuccess';
 import SetupCompany from './pages/SetupCompany';
 import CreatorDashboard from './pages/CreatorDashboard';
+import InviteAccept from './pages/InviteAccept';
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -94,6 +95,7 @@ export default function App() {
             }
           />
 
+          <Route path="/invite/:token" element={<InviteAccept />} />
           <Route path="/billing/success" element={<BillingSuccess />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

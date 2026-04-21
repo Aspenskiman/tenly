@@ -5,7 +5,7 @@ import { getCompanyEntries } from '../controllers/entryController.js';
 
 const router = Router();
 
-router.get('/teams', requireAuth, requireRole('executive', 'manager'), getAllTeams);
+router.get('/teams', requireAuth, requireRole('executive', 'manager', 'creator'), getAllTeams);
 router.get('/entries', requireAuth, requireRole('executive', 'manager'), getCompanyEntries);
 
 export default router;

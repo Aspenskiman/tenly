@@ -31,6 +31,42 @@ export interface DigestData {
   membersAtRisk: Array<{ name: string; avg: number; trend: string }>;
 }
 
+export interface InviteData {
+  toEmail: string;
+  companyName: string;
+  inviterName: string;
+  inviteUrl: string;
+}
+
+export async function sendInviteEmail(data: InviteData): Promise<void> {
+  const t = getTransporter();
+
+  await t.sendMail({
+    from: process.env.EMAIL_FROM ?? 'noreply@tenly.app',
+    to: data.toEmail,
+    subject: `You've been invited to join ${data.companyName} on Tenly`,
+    text: [
+      `Hi,`,
+      ``,
+      `${data.inviterName} has invited you to join ${data.companyName} on Tenly as a team manager.`,
+      ``,
+      `Accept your invitation here:`,
+      data.inviteUrl,
+      ``,
+      `This link expires in 7 days.`,
+      ``,
+      `— The Tenly Team`,
+    ].join('\n'),
+  });
+
+  if (process.env.EMAIL_TRANSPORT !== 'smtp') {
+    console.log('[EMAIL] Invite (console transport):');
+    console.log(`  To: ${data.toEmail}`);
+    console.log(`  Company: ${data.companyName}`);
+    console.log(`  URL: ${data.inviteUrl}`);
+  }
+}
+
 export async function sendWeeklyDigest(data: DigestData): Promise<void> {
   const t = getTransporter();
 

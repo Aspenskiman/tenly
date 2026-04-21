@@ -50,6 +50,7 @@ export async function createTeam(req: AuthRequest, res: Response): Promise<void>
       data: {
         company_id: req.user!.companyId,
         manager_id: req.user!.userId,
+        created_by_user_id: req.user!.userId,
         name,
       },
     });

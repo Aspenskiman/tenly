@@ -21,7 +21,7 @@ const logEntrySchema = z.object({
 
 // Manager routes
 router.get('/my', requireAuth, requireRole('manager'), getMyTeams);
-router.post('/', requireAuth, requireRole('manager'), validate(createTeamSchema), createTeam);
+router.post('/', requireAuth, requireRole('manager', 'creator'), validate(createTeamSchema), createTeam);
 router.get('/:teamId/summary', requireAuth, requireRole('manager'), getTeamSummary);
 
 // Members
