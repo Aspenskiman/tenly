@@ -1,87 +1,197 @@
-import { useState, FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { register, login } from '../api/auth';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { theme } from '../lib/theme';
+import { fetchPreAuthSession, PreAuthSession } from '../api/stripe';
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', email: '', password: '', companyName: '' });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { setUser } = useAuth();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const sessionId = searchParams.get('session_id');
 
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [key]: e.target.value }));
+  const [session, setSession] = useState<PreAuthSession | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionError, setSessionError] = useState('');
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await register(form);
-      const user = await login(form.email, form.password);
-      setUser(user);
-      navigate('/dashboard');
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-        'Registration failed.';
-      setError(msg);
-    } finally {
-      setLoading(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  useEffect(() => {
+    if (!sessionId) {
+      navigate('/setup-company', { replace: true });
+      return;
     }
+
+    fetchPreAuthSession(sessionId)
+      .then(data => {
+        if (!data.paid) {
+          setSessionError('Payment not confirmed. Please complete checkout first.');
+        } else {
+          setSession(data);
+          if (data.customerEmail) setEmail(data.customerEmail);
+        }
+      })
+      .catch(() => setSessionError('Could not load your session. Try again or contact support.'))
+      .finally(() => setSessionLoading(false));
+  }, [sessionId, navigate]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!session) return;
+    setSubmitError('');
+    setSubmitting(true);
+
+    const payload = {
+      name: name.trim(),
+      email: email.trim(),
+      password,
+      companyName: session.companyName,
+      teamName: session.teamName,
+      tier: session.tier,
+      sessionId,
+    };
+
+    // Phase 3 will implement POST /api/auth/register-creator
+    console.log('[register-creator payload]', payload);
+
+    // Simulate success for now
+    await new Promise(r => setTimeout(r, 400));
+    setSuccess(true);
+    setSubmitting(false);
+  }
+
+  if (sessionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: theme.bg }}>
+        <p className="text-sm animate-pulse" style={{ color: theme.textMid }}>Loading your session…</p>
+      </div>
+    );
+  }
+
+  if (sessionError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: theme.bg }}>
+        <div className="w-full max-w-md text-center space-y-4">
+          <h1 className="text-2xl font-black text-white">Payment not confirmed</h1>
+          <p className="text-sm" style={{ color: theme.textMid }}>{sessionError}</p>
+          <button
+            onClick={() => navigate('/setup-company')}
+            className="px-6 py-2.5 rounded-xl font-semibold text-sm"
+            style={{ backgroundColor: theme.accent, color: '#fff' }}
+          >
+            Back to Plans
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: theme.bg }}>
+        <div className="w-full max-w-md text-center space-y-3">
+          <div className="text-4xl">✓</div>
+          <h1 className="text-2xl font-black text-white">Account created!</h1>
+          <p className="text-sm" style={{ color: theme.textMid }}>
+            Welcome to Tenly, {name}. Your workspace for <strong style={{ color: 'white' }}>{session?.companyName}</strong> is ready.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-2.5 rounded-xl font-semibold text-sm mt-2"
+            style={{ backgroundColor: theme.accent, color: '#fff' }}
+          >
+            Sign in →
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: theme.bg }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-tenly-600 tracking-tight mb-1">tenly</h1>
-          <p className="text-gray-500 text-sm">Set up your team in 30 seconds.</p>
+          <h1 className="text-4xl font-black tracking-tight mb-1" style={{ color: theme.accentLt }}>tenly</h1>
+          <p className="text-sm" style={{ color: theme.textMid }}>Payment confirmed. Create your account.</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Create your account</h2>
+        {/* Session summary (read-only) */}
+        <div
+          className="rounded-xl px-4 py-3 mb-5 flex items-center justify-between"
+          style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
+        >
+          <div>
+            <p className="text-xs font-semibold text-white">{session?.companyName}</p>
+            <p className="text-xs" style={{ color: theme.textMute }}>Team: {session?.teamName}</p>
+          </div>
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded-full capitalize"
+            style={{ backgroundColor: `${theme.accent}20`, color: theme.accentLt, border: `1px solid ${theme.accent}40` }}
+          >
+            {session?.tier}
+          </span>
+        </div>
+
+        <div className="rounded-2xl p-8" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}>
+          <h2 className="text-xl font-semibold text-white mb-6">Create your account</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {[
-              { label: 'Your name', key: 'name' as const, type: 'text' },
-              { label: 'Work email', key: 'email' as const, type: 'email' },
-              { label: 'Company name', key: 'companyName' as const, type: 'text' },
-              { label: 'Password', key: 'password' as const, type: 'password' },
-            ].map(({ label, key, type }) => (
-              <div key={key}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                <input
-                  type={type}
-                  value={form[key]}
-                  onChange={set(key)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tenly-500"
-                  required={key !== 'companyName'}
-                  minLength={key === 'password' ? 8 : undefined}
-                />
-              </div>
-            ))}
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Your Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+                className="w-full px-3 py-2.5 rounded-xl text-white text-sm focus:outline-none"
+                style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
+              />
+            </div>
 
-            {error && (
-              <p className="text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">{error}</p>
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Work Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full px-3 py-2.5 rounded-xl text-white text-sm focus:outline-none"
+                style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full px-3 py-2.5 rounded-xl text-white text-sm focus:outline-none"
+                style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
+              />
+              <p className="text-xs mt-1" style={{ color: theme.textMute }}>Minimum 8 characters</p>
+            </div>
+
+            {submitError && (
+              <p className="text-sm px-3 py-2 rounded-xl" style={{ color: '#EF4444', backgroundColor: theme.card, border: `1px solid rgba(239,68,68,0.2)` }}>
+                {submitError}
+              </p>
             )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-tenly-600 hover:bg-tenly-700 text-white py-2.5 rounded-lg font-medium text-sm transition disabled:opacity-50"
+              disabled={submitting}
+              className="w-full py-2.5 rounded-xl font-semibold text-sm transition disabled:opacity-50"
+              style={{ backgroundColor: theme.accent, color: '#FFFFFF' }}
             >
-              {loading ? 'Creating account…' : 'Create account'}
+              {submitting ? 'Creating account…' : 'Create account →'}
             </button>
           </form>
-
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Already have an account?{' '}
-            <Link to="/login" className="text-tenly-600 hover:underline font-medium">
-              Sign in
-            </Link>
-          </p>
         </div>
       </div>
     </div>
