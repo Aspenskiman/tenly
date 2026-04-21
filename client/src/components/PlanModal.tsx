@@ -17,7 +17,7 @@ interface Props {
 }
 
 export default function PlanModal({ onClose }: Props) {
-  const [loading, setLoading] = useState<'SOLO' | 'TEAM' | null>(null);
+  const [loading, setLoading] = useState<'SOLO' | null>(null);
 
   const { data: planStatus } = useQuery({
     queryKey: ['plan-status'],
@@ -26,7 +26,7 @@ export default function PlanModal({ onClose }: Props) {
 
   const currentPlan = planStatus?.plan ?? 'FREE';
 
-  async function handleUpgrade(plan: 'SOLO' | 'TEAM') {
+  async function handleUpgrade(plan: 'SOLO') {
     setLoading(plan);
     try {
       const { url } = await createCheckoutSession(plan);
@@ -42,25 +42,17 @@ export default function PlanModal({ onClose }: Props) {
       plan: 'FREE' as Plan,
       price: '$0',
       period: 'forever',
-      members: '4 members',
+      members: 'Up to 5 members',
       features: ['Basic dashboards', '90-day history'],
       cta: null,
     },
     {
       plan: 'SOLO' as Plan,
-      price: '$12',
+      price: '$15',
       period: '/mo',
-      members: 'Unlimited members',
+      members: 'Up to 25 members',
       features: ['Full history', 'All dashboards'],
       cta: 'SOLO' as const,
-    },
-    {
-      plan: 'TEAM' as Plan,
-      price: '$14',
-      period: '/mgr/mo',
-      members: 'Unlimited members',
-      features: ['Executive dashboard', 'Manager invites', 'One invoice'],
-      cta: 'TEAM' as const,
     },
   ];
 
