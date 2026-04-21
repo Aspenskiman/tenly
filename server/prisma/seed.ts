@@ -109,6 +109,7 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Clean slate
+  await prisma.invite.deleteMany();
   await prisma.happinessEntry.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.teamMember.deleteMany();
@@ -141,8 +142,14 @@ async function main() {
       name: 'Alex Rivera',
       email: 'manager1@acme.com',
       password_hash: passwordHash,
-      role: 'manager',
+      role: 'creator',
     },
+  });
+
+  // Set Acme Corp creator and tier now that manager1 exists
+  await prisma.company.update({
+    where: { id: company.id },
+    data: { created_by_user_id: manager1.id, tier: 'team' },
   });
   const manager2 = await prisma.user.create({
     data: {

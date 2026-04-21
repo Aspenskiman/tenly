@@ -10,6 +10,7 @@ datasource db {
 enum Role {
   manager
   executive
+  creator
 }
 
 enum Plan {
@@ -20,40 +21,58 @@ enum Plan {
   ENTERPRISE
 }
 
+enum Tier {
+  free
+  solo
+  team
+  enterprise
+}
+
 model Company {
   id                     String    @id @default(uuid())
   name                   String
   plan                   Plan      @default(FREE)
+  tier                   Tier      @default(free)
   stripe_customer_id     String?
   stripe_subscription_id String?
+  created_by_user_id     String?
   created_at             DateTime  @default(now())
-  users                  User[]
+  users                  User[]    @relation("CompanyMembers")
+  created_by             User?     @relation("CompanyCreatedBy", fields: [created_by_user_id], references: [id])
   teams                  Team[]
+  invites                Invite[]
 }
 
 model User {
-  id             String           @id @default(uuid())
-  company_id     String
-  name           String
-  email          String           @unique
-  password_hash  String
-  role           Role             @default(manager)
-  created_at     DateTime         @default(now())
-  company        Company          @relation(fields: [company_id], references: [id])
-  teams          Team[]
-  logged_entries HappinessEntry[]
-  refresh_tokens RefreshToken[]
+  id                     String           @id @default(uuid())
+  company_id             String
+  name                   String
+  email                  String           @unique
+  password_hash          String
+  role                   Role             @default(manager)
+  stripe_customer_id     String?
+  stripe_subscription_id String?
+  created_at             DateTime         @default(now())
+  company                Company          @relation("CompanyMembers", fields: [company_id], references: [id])
+  teams                  Team[]           @relation("TeamManager")
+  created_companies      Company[]        @relation("CompanyCreatedBy")
+  created_teams          Team[]           @relation("TeamCreatedBy")
+  logged_entries         HappinessEntry[]
+  refresh_tokens         RefreshToken[]
 }
 
 model Team {
-  id         String       @id @default(uuid())
-  company_id String
-  manager_id String
-  name       String
-  created_at DateTime     @default(now())
-  company    Company      @relation(fields: [company_id], references: [id])
-  manager    User         @relation(fields: [manager_id], references: [id])
-  members    TeamMember[]
+  id                 String       @id @default(uuid())
+  company_id         String
+  manager_id         String
+  created_by_user_id String?
+  name               String
+  created_at         DateTime     @default(now())
+  company            Company      @relation(fields: [company_id], references: [id])
+  manager            User         @relation("TeamManager", fields: [manager_id], references: [id])
+  created_by         User?        @relation("TeamCreatedBy", fields: [created_by_user_id], references: [id])
+  members            TeamMember[]
+  invites            Invite[]
 }
 
 model TeamMember {
@@ -86,4 +105,16 @@ model RefreshToken {
   expires_at DateTime
   created_at DateTime @default(now())
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Invite {
+  id          String    @id @default(cuid())
+  company_id  String
+  team_id     String?
+  email       String
+  token       String    @unique
+  accepted_at DateTime?
+  created_at  DateTime  @default(now())
+  company     Company   @relation(fields: [company_id], references: [id])
+  team        Team?     @relation(fields: [team_id], references: [id])
 }
