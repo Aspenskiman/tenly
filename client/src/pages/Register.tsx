@@ -25,8 +25,11 @@ export default function Register() {
       return;
     }
 
+    const controller = new AbortController();
+
     fetchPreAuthSession(sessionId)
       .then(data => {
+        if (controller.signal.aborted) return;
         if (!data.paid) {
           setSessionError('Payment not confirmed. Please complete checkout first.');
         } else {
@@ -34,8 +37,15 @@ export default function Register() {
           if (data.customerEmail) setEmail(data.customerEmail);
         }
       })
-      .catch(() => setSessionError('Could not load your session. Try again or contact support.'))
-      .finally(() => setSessionLoading(false));
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setSessionError('Could not load your session. Try again or contact support.');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setSessionLoading(false);
+      });
+
+    return () => controller.abort();
   }, [sessionId, navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -55,7 +65,7 @@ export default function Register() {
     };
 
     // Phase 3 will implement POST /api/auth/register-creator
-    console.log('[register-creator payload]', payload);
+    console.log('[register-creator payload]', { ...payload, password: '[REDACTED]' });
 
     // Simulate success for now
     await new Promise(r => setTimeout(r, 400));
@@ -140,9 +150,11 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Your Name</label>
+              <label htmlFor="creator-name" className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Your Name</label>
               <input
+                id="creator-name"
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 required
@@ -152,9 +164,11 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Work Email</label>
+              <label htmlFor="creator-email" className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Work Email</label>
               <input
+                id="creator-email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -164,9 +178,11 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Password</label>
+              <label htmlFor="creator-password" className="block text-sm font-medium mb-1" style={{ color: theme.textMid }}>Password</label>
               <input
+                id="creator-password"
                 type="password"
+                autoComplete="new-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
