@@ -104,3 +104,58 @@ export async function handleWebhook(payload: Buffer, signature: string) {
 
   return { received: true };
 }
+
+export async function createPreAuthCheckoutSession({
+  tier,
+  companyName,
+  teamName,
+  origin,
+}: {
+  tier: 'team' | 'enterprise';
+  companyName: string;
+  teamName: string;
+  origin: string;
+}) {
+  const unitAmount = tier === 'team' ? 4000 : 7500; // $40 / $75 in cents
+  const productName = tier === 'team' ? 'Tenly Team' : 'Tenly Enterprise';
+
+  const session = await stripe.checkout.sessions.create({
+    mode: 'subscription',
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: { name: productName },
+          unit_amount: unitAmount,
+          recurring: { interval: 'month' },
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: `${origin}/register?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/login`,
+    metadata: { tier, companyName, teamName },
+  });
+
+  return session;
+}
+
+export async function getPreAuthSession(sessionId: string) {
+  const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: ['customer_details'],
+  });
+
+  const meta = session.metadata ?? {};
+  const customerEmail =
+    (session as any).customer_details?.email ??
+    session.customer_email ??
+    '';
+
+  return {
+    tier: meta.tier ?? '',
+    companyName: meta.companyName ?? '',
+    teamName: meta.teamName ?? '',
+    customerEmail,
+    paid: session.payment_status === 'paid',
+  };
+}
