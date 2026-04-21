@@ -11,7 +11,7 @@ export async function getPlanStatus(req: AuthRequest, res: Response): Promise<vo
   try {
     const company = await prisma.company.findUnique({
       where: { id: req.user!.companyId },
-      select: { plan: true },
+      select: { plan: true, tier: true },
     });
     if (!company) {
       res.status(404).json({ error: 'Company not found' });
@@ -19,6 +19,7 @@ export async function getPlanStatus(req: AuthRequest, res: Response): Promise<vo
     }
     res.json({
       plan: company.plan,
+      tier: company.tier,
       memberLimit: company.plan === 'FREE' ? FREE_MEMBER_LIMIT : null,
     });
   } catch (err) {

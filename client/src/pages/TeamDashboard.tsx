@@ -306,6 +306,9 @@ export default function TeamDashboard() {
         <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl p-5">
           <div className="flex items-center justify-between">
             <div>
+              {teams?.[0]?.name && (
+                <p className="text-sm font-bold text-white mb-1">{teams[0].name}</p>
+              )}
               <p className="text-xs font-semibold text-[rgba(180,180,255,0.35)] uppercase tracking-wider">Team Average</p>
               <div className="flex items-baseline gap-2 mt-1">
                 <span

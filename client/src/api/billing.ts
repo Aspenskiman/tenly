@@ -1,9 +1,11 @@
 import api from './client';
 
 export type Plan = 'FREE' | 'SOLO' | 'TEAM' | 'COMPANY' | 'ENTERPRISE';
+export type Tier = 'free' | 'solo' | 'team' | 'enterprise';
 
 export interface PlanStatus {
   plan: Plan;
+  tier: Tier;
   memberLimit: number | null;
 }
 

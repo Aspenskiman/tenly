@@ -13,6 +13,12 @@ const PLAN_BADGE: Record<string, { label: string; color: string; bg: string }> =
   ENTERPRISE: { label: 'Enterprise', color: '#E879F9',                bg: 'rgba(232,121,249,0.1)'  },
 };
 
+// Maps DB tier values to creator-signup pricing labels
+const TIER_LABEL: Record<string, string> = {
+  team:       'Growth',
+  enterprise: 'Team',
+};
+
 export default function Navbar() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -34,7 +40,9 @@ export default function Navbar() {
   const isManager = user?.role === 'manager';
   const isCreator = user?.role === 'creator';
   const plan = planStatus?.plan ?? 'FREE';
+  const tier = planStatus?.tier;
   const badge = PLAN_BADGE[plan] ?? PLAN_BADGE.FREE;
+  const badgeLabel = (tier && TIER_LABEL[tier]) ? TIER_LABEL[tier] : badge.label;
 
   const navLinks = (isManager || isCreator) ? [
     { to: '/dashboard', label: 'Dashboard' },
@@ -121,7 +129,7 @@ export default function Navbar() {
             {/* Plan badge */}
             <button
               onClick={() => setShowPlan(true)}
-              title={`${badge.label} plan — click to manage`}
+              title={`${badgeLabel} plan — click to manage`}
               style={{
                 fontSize: 10,
                 fontWeight: 600,
@@ -141,7 +149,7 @@ export default function Navbar() {
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >
-              {badge.label}
+              {badgeLabel}
             </button>
 
             <button
