@@ -7,3 +7,8 @@
     @apply bg-gray-50 text-gray-900 antialiased;
   }
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

@@ -5,12 +5,11 @@ import Layout from '../components/Layout';
 import { getMyTeams, getTeamSummary, logEntry, getMemberEntries, MemberWithTrend } from '../api/teams';
 import { scoreColor, formatDate } from '../lib/scores';
 
-const SCORE_ZONES: Record<number, string> = {
-  1: 'Really hard right now', 2: 'Going through a lot', 3: 'Going through a lot',
-  4: 'Holding through it', 5: 'Holding through it',
-  6: 'In a good place', 7: 'In a good place', 8: 'In a good place',
-  9: 'Firing on all cylinders', 10: 'Firing on all cylinders',
-};
+function suggestionAccent(s: number): string {
+  if (s >= 8) return '#22C55E';
+  if (s >= 5) return '#FFF200';
+  return '#F97316';
+}
 
 const SUGGESTIONS: Record<number, string> = {
   1: "You're already showing up for them. Is there anything they need right now?",
@@ -149,16 +148,21 @@ export default function LogScore() {
               })}
             </div>
 
-            {/* Zone label + suggestion */}
+            {/* Conversation suggestion card */}
             {score && (
-              <>
-                <p className="text-xs text-center font-semibold" style={{ color: activeColor }}>
-                  {SCORE_ZONES[score]}
-                </p>
-                <p className="text-sm italic text-zinc-400 text-center mt-1">
-                  {SUGGESTIONS[score]}
-                </p>
-              </>
+              <div
+                key={score}
+                className="rounded-lg px-4 py-3"
+                style={{
+                  backgroundColor: '#1F1F23',
+                  border: '1px solid #27272C',
+                  borderLeftWidth: '3px',
+                  borderLeftColor: suggestionAccent(score),
+                  animation: 'fadeIn 0.15s ease',
+                }}
+              >
+                <p className="text-sm italic text-zinc-300">{SUGGESTIONS[score]}</p>
+              </div>
             )}
           </div>
         )}
