@@ -10,6 +10,7 @@ import MemberDashboard from './pages/MemberDashboard';
 import ExecutiveDashboard from './pages/ExecutiveDashboard';
 import WeeklyDigest from './pages/WeeklyDigest';
 import BillingSuccess from './pages/BillingSuccess';
+import SetupCompany from './pages/SetupCompany';
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/setup-company" element={<SetupCompany />} />
 
           {/* Manager routes */}
           <Route
