@@ -15,24 +15,18 @@ const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string; bo
 
 const CREATOR_TIERS = {
   growth: {
-    label: 'Growth',
+    config: { label: 'Growth', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' },
     price: '$49',
     period: '/mo',
     members: 'Up to 75 members',
     features: ['Unlimited teams', 'Unlimited managers', 'Weekly digest email', 'Score history & trends'],
-    color: '#F59E0B',
-    bg: 'rgba(245,158,11,0.1)',
-    border: 'rgba(245,158,11,0.3)',
   },
   team: {
-    label: 'Team',
+    config: { label: 'Team', color: '#22C55E', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.3)' },
     price: '$99',
     period: '/mo',
     members: 'Up to 150 members',
     features: ['Unlimited teams', 'Unlimited managers', 'Executive dashboard', 'Company-wide analytics'],
-    color: '#22C55E',
-    bg: 'rgba(34,197,94,0.1)',
-    border: 'rgba(34,197,94,0.3)',
   },
 };
 
