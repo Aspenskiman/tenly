@@ -87,6 +87,33 @@ export default function Login() {
           </p>
         </div>
 
+        {/* Setup new company entry point */}
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
+          <span className="text-xs font-medium" style={{ color: theme.textMute }}>or</span>
+          <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
+        </div>
+
+        <button
+          onClick={() => navigate('/setup-company')}
+          className="w-full py-2.5 rounded-xl font-semibold text-sm transition"
+          style={{
+            backgroundColor: 'transparent',
+            border: `1px solid ${theme.border}`,
+            color: theme.textMid,
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = theme.accent;
+            (e.currentTarget as HTMLButtonElement).style.color = theme.accentLt;
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = theme.border;
+            (e.currentTarget as HTMLButtonElement).style.color = theme.textMid;
+          }}
+        >
+          Setup New Company →
+        </button>
+
         <p className="text-center text-xs mt-6" style={{ color: theme.textMute }}>
           Demo: manager1@acme.com / password · exec@acme.com / password
         </p>
