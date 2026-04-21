@@ -141,13 +141,11 @@ export async function createPreAuthCheckoutSession({
 }
 
 export async function getPreAuthSession(sessionId: string) {
-  const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: ['customer_details'],
-  });
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
 
   const meta = session.metadata ?? {};
   const customerEmail =
-    (session as any).customer_details?.email ??
+    session.customer_details?.email ??
     session.customer_email ??
     '';
 
