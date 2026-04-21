@@ -19,7 +19,11 @@ export default function ProtectedRoute({ children, role }: Props) {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  if (role && user.role !== role) {
+  const hasAccess = !role
+    || user.role === role
+    || (role === 'manager' && user.role === 'creator');
+
+  if (!hasAccess) {
     return <Navigate to={user.role === 'executive' ? '/executive' : '/dashboard'} replace />;
   }
 
