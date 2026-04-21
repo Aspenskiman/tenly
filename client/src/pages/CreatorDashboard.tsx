@@ -1,9 +1,13 @@
 import { useAuth } from '../context/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { getMyTeams } from '../api/teams';
 import Navbar from '../components/Navbar';
 import { theme } from '../lib/theme';
 
 export default function CreatorDashboard() {
   const { user } = useAuth();
+  const { data: teams } = useQuery({ queryKey: ['my-teams'], queryFn: getMyTeams });
+  const team = teams?.[0];
 
   return (
     <div style={{ minHeight: '100vh', background: theme.bg }}>
@@ -24,7 +28,7 @@ export default function CreatorDashboard() {
           style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-white">Your Team</h2>
+            <h2 className="text-base font-bold text-white">{team?.name ?? 'Your Team'}</h2>
             <span
               className="text-xs px-2 py-0.5 rounded-md font-semibold"
               style={{ backgroundColor: `${theme.accent}20`, color: theme.accentLt, border: `1px solid ${theme.accent}40` }}

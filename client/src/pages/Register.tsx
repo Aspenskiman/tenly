@@ -3,10 +3,12 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { theme } from '../lib/theme';
 import { fetchPreAuthSession, PreAuthSession } from '../api/stripe';
 import { registerCreator } from '../api/auth';
+import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const sessionId = searchParams.get('session_id');
 
   const [session, setSession] = useState<PreAuthSession | null>(null);
@@ -57,7 +59,7 @@ export default function Register() {
     setSubmitting(true);
 
     try {
-      await registerCreator({
+      const result = await registerCreator({
         name: name.trim(),
         email: email.trim(),
         password,
@@ -65,6 +67,7 @@ export default function Register() {
         teamName: teamName.trim(),
         sessionId: sessionId!,
       });
+      setUser(result.user);
       navigate('/creator-dashboard', { replace: true });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
