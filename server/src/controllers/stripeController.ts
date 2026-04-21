@@ -41,6 +41,10 @@ export async function createPreAuthCheckout(req: Request, res: Response): Promis
       origin,
     });
 
+    if (!session.url) {
+      res.status(500).json({ error: 'Stripe did not return a redirect URL' });
+      return;
+    }
     res.json({ url: session.url });
   } catch (err) {
     console.error('[createPreAuthCheckout]', err);
@@ -85,20 +89,24 @@ export async function handlePreAuthWebhook(req: Request, res: Response): Promise
       sess.customer_details?.email ?? sess.customer_email;
 
     if (email) {
-      const user = await prisma.user.findUnique({ where: { email } });
-      if (user) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            stripe_customer_id: String(sess.customer),
-            stripe_subscription_id: String(sess.subscription),
-          },
-        });
-        console.log(`[Stripe pre-auth webhook] Updated stripe fields for ${email}`);
-      } else {
-        console.log(
-          `[Stripe pre-auth webhook] No user found for ${email} — will hydrate at registration`
-        );
+      try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (user) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              stripe_customer_id: String(sess.customer),
+              stripe_subscription_id: String(sess.subscription),
+            },
+          });
+          console.log(`[Stripe pre-auth webhook] Updated stripe fields for ${email}`);
+        } else {
+          console.log(
+            `[Stripe pre-auth webhook] No user found for ${email} — will hydrate at registration`
+          );
+        }
+      } catch (dbErr) {
+        console.error('[Stripe pre-auth webhook] DB error during user hydration:', dbErr);
       }
     }
   }
