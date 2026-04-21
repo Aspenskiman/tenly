@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 interface Props {
   children: React.ReactNode;
-  role?: 'manager' | 'executive';
+  role?: 'manager' | 'executive' | 'creator';
 }
 
 export default function ProtectedRoute({ children, role }: Props) {
@@ -21,10 +21,13 @@ export default function ProtectedRoute({ children, role }: Props) {
 
   const hasAccess = !role
     || user.role === role
-    || (role === 'manager' && user.role === 'creator');
+    || (role === 'manager' && user.role === 'creator')
+    || (role === 'creator' && user.role === 'creator');
 
   if (!hasAccess) {
-    return <Navigate to={user.role === 'executive' ? '/executive' : '/dashboard'} replace />;
+    if (user.role === 'executive') return <Navigate to="/executive" replace />;
+    if (user.role === 'creator') return <Navigate to="/creator-dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

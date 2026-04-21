@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { theme } from '../lib/theme';
 import { fetchPreAuthSession, PreAuthSession } from '../api/stripe';
+import { registerCreator } from '../api/auth';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -18,7 +19,6 @@ export default function Register() {
   const [companyName, setCompanyName] = useState('');
   const [teamName, setTeamName] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
@@ -56,23 +56,21 @@ export default function Register() {
     setSubmitError('');
     setSubmitting(true);
 
-    const payload = {
-      name: name.trim(),
-      email: email.trim(),
-      password,
-      companyName: companyName.trim(),
-      teamName: teamName.trim(),
-      tier: session.tier,
-      sessionId,
-    };
-
-    // Phase 3 will implement POST /api/auth/register-creator
-    console.log('[register-creator payload]', { ...payload, password: '[REDACTED]' });
-
-    // Simulate success for now
-    await new Promise(r => setTimeout(r, 400));
-    setSuccess(true);
-    setSubmitting(false);
+    try {
+      await registerCreator({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        companyName: companyName.trim(),
+        teamName: teamName.trim(),
+        sessionId: sessionId!,
+      });
+      navigate('/creator-dashboard', { replace: true });
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setSubmitError(msg ?? 'Something went wrong. Please try again.');
+      setSubmitting(false);
+    }
   }
 
   if (sessionLoading) {
@@ -95,27 +93,6 @@ export default function Register() {
             style={{ backgroundColor: theme.accent, color: '#fff' }}
           >
             Back to Plans
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: theme.bg }}>
-        <div className="w-full max-w-md text-center space-y-3">
-          <div className="text-4xl">✓</div>
-          <h1 className="text-2xl font-black text-white">Account created!</h1>
-          <p className="text-sm" style={{ color: theme.textMid }}>
-            Welcome to Tenly, {name}. Your workspace for <strong style={{ color: 'white' }}>{companyName}</strong> is ready.
-          </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="px-6 py-2.5 rounded-xl font-semibold text-sm mt-2"
-            style={{ backgroundColor: theme.accent, color: '#fff' }}
-          >
-            Sign in →
           </button>
         </div>
       </div>

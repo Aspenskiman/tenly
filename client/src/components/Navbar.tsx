@@ -32,10 +32,11 @@ export default function Navbar() {
   };
 
   const isManager = user?.role === 'manager';
+  const isCreator = user?.role === 'creator';
   const plan = planStatus?.plan ?? 'FREE';
   const badge = PLAN_BADGE[plan] ?? PLAN_BADGE.FREE;
 
-  const navLinks = isManager ? [
+  const navLinks = (isManager || isCreator) ? [
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/roster', label: 'Roster' },
     { to: '/log', label: '+ Log' },
@@ -65,7 +66,7 @@ export default function Navbar() {
             tenly
           </Link>
 
-          {isManager && (
+          {(isManager || isCreator) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {navLinks.map(link => {
                 const active = location.pathname === link.to;
@@ -95,6 +96,27 @@ export default function Navbar() {
         {user && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 12, color: 'rgba(180,180,255,0.6)' }}>{user.name}</span>
+
+            {/* Mode toggle for creator */}
+            {isCreator && (() => {
+              const onCreator = location.pathname === '/creator-dashboard';
+              const tabStyle = (active: boolean): React.CSSProperties => ({
+                fontSize: 11,
+                fontWeight: active ? 700 : 400,
+                padding: '3px 8px',
+                borderRadius: 6,
+                textDecoration: 'none',
+                background: active ? 'rgba(124,111,247,0.25)' : 'transparent',
+                color: active ? '#A78BFA' : 'rgba(180,180,255,0.4)',
+                transition: 'all 0.15s',
+              });
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(124,111,247,0.08)', border: '1px solid rgba(124,111,247,0.2)', borderRadius: 8, padding: '2px 3px', gap: 2 }}>
+                  <Link to="/creator-dashboard" style={tabStyle(onCreator)}>Creator</Link>
+                  <Link to="/dashboard" style={tabStyle(!onCreator)}>Team Manager</Link>
+                </div>
+              );
+            })()}
 
             {/* Plan badge */}
             <button

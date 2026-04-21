@@ -11,12 +11,15 @@ import ExecutiveDashboard from './pages/ExecutiveDashboard';
 import WeeklyDigest from './pages/WeeklyDigest';
 import BillingSuccess from './pages/BillingSuccess';
 import SetupCompany from './pages/SetupCompany';
+import CreatorDashboard from './pages/CreatorDashboard';
 
 function RootRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={user.role === 'executive' ? '/executive' : '/dashboard'} replace />;
+  if (user.role === 'executive') return <Navigate to="/executive" replace />;
+  if (user.role === 'creator') return <Navigate to="/creator-dashboard" replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 export default function App() {
@@ -77,6 +80,16 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ExecutiveDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Creator */}
+          <Route
+            path="/creator-dashboard"
+            element={
+              <ProtectedRoute role="creator">
+                <CreatorDashboard />
               </ProtectedRoute>
             }
           />

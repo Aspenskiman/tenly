@@ -18,7 +18,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 }
 
-export function requireRole(...roles: ('manager' | 'executive')[]) {
+export function requireRole(...roles: ('manager' | 'executive' | 'creator')[]) {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
       res.status(403).json({ error: 'Forbidden' });

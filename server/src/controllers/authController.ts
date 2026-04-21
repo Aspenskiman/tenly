@@ -3,7 +3,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Tier, Plan } from '@prisma/client';
+import { stripe } from '../services/stripeService.js';
 import { AuthPayload, AuthRequest } from '../types/index.js';
 
 const prisma = new PrismaClient();
@@ -22,6 +23,15 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+});
+
+export const registerCreatorSchema = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email(),
+  password: z.string().min(8),
+  companyName: z.string().min(1).max(200),
+  teamName: z.string().min(1).max(200),
+  sessionId: z.string().regex(/^cs_[a-zA-Z0-9_]+$/),
 });
 
 function makeAccessToken(payload: AuthPayload): string {
@@ -51,6 +61,91 @@ function setTokenCookies(res: Response, accessToken: string, refreshToken: strin
 function clearTokenCookies(res: Response) {
   res.clearCookie('access_token');
   res.clearCookie('refresh_token', { path: '/api/auth/refresh' });
+}
+
+function mapStripeTierToDb(metaTier: string): { tier: Tier; plan: Plan } {
+  if (metaTier === 'growth') return { tier: Tier.team, plan: Plan.TEAM };
+  if (metaTier === 'team') return { tier: Tier.enterprise, plan: Plan.ENTERPRISE };
+  return { tier: Tier.free, plan: Plan.FREE };
+}
+
+export async function registerCreator(req: Request, res: Response): Promise<void> {
+  try {
+    const { name, email, password, companyName, teamName, sessionId } = req.body as z.infer<typeof registerCreatorSchema>;
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.payment_status !== 'paid') {
+      res.status(402).json({ error: 'Payment not completed' });
+      return;
+    }
+
+    const metaTier = session.metadata?.tier ?? '';
+    const { tier, plan } = mapStripeTierToDb(metaTier);
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      res.status(409).json({ error: 'Email already registered' });
+      return;
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const { company, user, team } = await prisma.$transaction(async (tx) => {
+      const company = await tx.company.create({
+        data: { name: companyName, tier, plan },
+      });
+
+      const user = await tx.user.create({
+        data: { company_id: company.id, name, email, password_hash, role: 'creator' },
+      });
+
+      await tx.company.update({
+        where: { id: company.id },
+        data: { created_by_user_id: user.id },
+      });
+
+      const team = await tx.team.create({
+        data: {
+          company_id: company.id,
+          manager_id: user.id,
+          created_by_user_id: user.id,
+          name: teamName,
+        },
+      });
+
+      return { company, user, team };
+    });
+
+    const payload: AuthPayload = {
+      userId: user.id,
+      email: user.email,
+      role: 'creator',
+      companyId: company.id,
+    };
+
+    const accessToken = makeAccessToken(payload);
+    const refreshToken = makeRefreshToken(payload);
+
+    const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    await prisma.refreshToken.create({
+      data: {
+        user_id: user.id,
+        token_hash: tokenHash,
+        expires_at: new Date(Date.now() + REFRESH_EXPIRES_MS),
+      },
+    });
+
+    setTokenCookies(res, accessToken, refreshToken);
+
+    res.status(201).json({
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: company.id, companyName: company.name },
+      company: { id: company.id, name: company.name, tier, plan },
+      team: { id: team.id, name: team.name },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Registration failed' });
+  }
 }
 
 export async function register(req: Request, res: Response): Promise<void> {
@@ -118,7 +213,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     const payload: AuthPayload = {
       userId: user.id,
       email: user.email,
-      role: user.role as 'manager' | 'executive',
+      role: user.role as 'manager' | 'executive' | 'creator',
       companyId: user.company_id,
     };
 
@@ -225,13 +320,13 @@ export async function me(req: AuthRequest, res: Response): Promise<void> {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.userId },
-      select: { id: true, name: true, email: true, role: true, company_id: true },
+      select: { id: true, name: true, email: true, role: true, company_id: true, company: { select: { name: true } } },
     });
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
-    res.json({ user: { ...user, companyId: user.company_id } });
+    res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: user.company_id, companyName: user.company.name } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch user' });
