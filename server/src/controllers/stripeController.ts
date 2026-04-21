@@ -55,6 +55,10 @@ export async function createPreAuthCheckout(req: Request, res: Response): Promis
 export async function getSession(req: Request, res: Response): Promise<void> {
   try {
     const { sessionId } = req.params;
+    if (!/^cs_[a-zA-Z0-9_]+$/.test(sessionId)) {
+      res.status(400).json({ error: 'Invalid session ID format' });
+      return;
+    }
     const data = await getPreAuthSession(sessionId);
     res.json(data);
   } catch (err) {

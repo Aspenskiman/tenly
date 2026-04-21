@@ -33,7 +33,8 @@ app.use(
   })
 );
 
-// Raw body required for Stripe webhook signature verification
+// Raw body required for Stripe webhook signature verification.
+// IMPORTANT: both entries must precede express.json() below.
 app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
