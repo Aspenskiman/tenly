@@ -35,7 +35,7 @@ export default function Login() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">
             <img
-              src="/tenlyiconapp.png"
+              src="/tenlyiconapp.svg"
               alt=""
               width={72}
               height={72}
