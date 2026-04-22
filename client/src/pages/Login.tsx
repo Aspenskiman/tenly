@@ -116,9 +116,6 @@ export default function Login() {
           Setup New Company →
         </button>
 
-        <p className="text-center text-xs mt-6" style={{ color: theme.textMute }}>
-          Demo: manager1@acme.com / password · exec@acme.com / password
-        </p>
       </div>
     </div>
   );
