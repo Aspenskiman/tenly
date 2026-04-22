@@ -84,7 +84,7 @@ export default function Login() {
           <p className="text-center text-sm mt-4" style={{ color: theme.textMid }}>
             No account?{' '}
             <Link to="/register" className="font-medium hover:underline" style={{ color: theme.accentLt }}>
-              Register your team
+              Start for free
             </Link>
           </p>
         </div>

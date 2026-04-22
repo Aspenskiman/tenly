@@ -158,6 +158,7 @@ export async function register(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    const password_hash = await bcrypt.hash(password, 10);
     let resolvedCompanyId: string;
 
     if (companyId) {
@@ -167,26 +168,46 @@ export async function register(req: Request, res: Response): Promise<void> {
         return;
       }
       resolvedCompanyId = company.id;
-    } else {
-      const company = await prisma.company.create({
-        data: { name: companyName ?? `${name}'s Company` },
+      const user = await prisma.user.create({
+        data: { company_id: resolvedCompanyId, name, email, password_hash, role: 'manager' },
       });
-      resolvedCompanyId = company.id;
+      const payload: AuthPayload = { userId: user.id, email: user.email, role: 'manager', companyId: resolvedCompanyId };
+      const accessToken = makeAccessToken(payload);
+      const refreshToken = makeRefreshToken(payload);
+      const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+      await prisma.refreshToken.create({ data: { user_id: user.id, token_hash: tokenHash, expires_at: new Date(Date.now() + REFRESH_EXPIRES_MS) } });
+      setTokenCookies(res, accessToken, refreshToken);
+      res.status(201).json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: resolvedCompanyId } });
+      return;
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
+    // New company + default team
+    const defaultName = companyName?.trim() || `${name}'s Team`;
+    const company = await prisma.company.create({ data: { name: defaultName } });
+    resolvedCompanyId = company.id;
+
     const user = await prisma.user.create({
+      data: { company_id: resolvedCompanyId, name, email, password_hash, role: 'manager' },
+    });
+
+    await prisma.team.create({
       data: {
         company_id: resolvedCompanyId,
-        name,
-        email,
-        password_hash,
-        role: 'manager',
+        manager_id: user.id,
+        created_by_user_id: user.id,
+        name: defaultName,
       },
     });
 
+    const payload: AuthPayload = { userId: user.id, email: user.email, role: 'manager', companyId: resolvedCompanyId };
+    const accessToken = makeAccessToken(payload);
+    const refreshToken = makeRefreshToken(payload);
+    const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    await prisma.refreshToken.create({ data: { user_id: user.id, token_hash: tokenHash, expires_at: new Date(Date.now() + REFRESH_EXPIRES_MS) } });
+    setTokenCookies(res, accessToken, refreshToken);
+
     res.status(201).json({
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: resolvedCompanyId },
     });
   } catch (err) {
     console.error(err);
