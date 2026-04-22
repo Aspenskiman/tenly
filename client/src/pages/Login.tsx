@@ -33,6 +33,15 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: theme.bg }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-3">
+            <img
+              src="/tenlyiconapp.png"
+              alt=""
+              width={72}
+              height={72}
+              className="rounded-2xl"
+            />
+          </div>
           <h1 className="text-4xl font-black tracking-tight mb-1" style={{ color: theme.accentLt }}>tenly</h1>
           <p className="text-sm" style={{ color: theme.textMid }}>Stop asking "How are you doing?" — start knowing.</p>
         </div>
