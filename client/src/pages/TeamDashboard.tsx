@@ -14,12 +14,12 @@ import { theme } from '../lib/theme';
 
 const CHART_COLORS = ['#A78BFA','#34D399','#60A5FA','#F472B6','#FBBF24','#F87171','#38BDF8','#A3E635'];
 
-type Range = '7d' | '30d' | '90d' | '12mo';
-const RANGES: { label: string; value: Range; days: number }[] = [
-  { label: '7d',   value: '7d',   days: 7   },
-  { label: '30d',  value: '30d',  days: 30  },
-  { label: '90d',  value: '90d',  days: 90  },
-  { label: '12mo', value: '12mo', days: 365 },
+type Range = '1mo' | '3mo' | '6mo' | '1yr';
+const RANGES: { label: string; value: Range; weeks: number; days: number }[] = [
+  { label: '1 Month',  value: '1mo', weeks: 4,  days: 35  },
+  { label: '3 Months', value: '3mo', weeks: 12, days: 91  },
+  { label: '6 Months', value: '6mo', weeks: 26, days: 189 },
+  { label: '1 Year',   value: '1yr', weeks: 52, days: 371 },
 ];
 
 function TeamTrendChart({ members, teamAvg }: { members: MemberWithTrend[]; teamAvg: number | null }) {
@@ -263,7 +263,7 @@ function MemberRow({ member }: { member: MemberWithTrend }) {
 
 export default function TeamDashboard() {
   const navigate = useNavigate();
-  const [range, setRange] = useState<Range>('30d');
+  const [range, setRange] = useState<Range>('1mo');
   const rangeObj = RANGES.find(r => r.value === range)!;
 
   const { data: teams, isLoading } = useQuery({ queryKey: ['teams'], queryFn: getMyTeams });
@@ -361,7 +361,7 @@ export default function TeamDashboard() {
                 </button>
               ))}
             </div>
-            <TeamTrendChart members={members} teamAvg={teamAvg} />
+            <TeamTrendChart members={members} teamAvg={teamAvg} weeks={rangeObj.weeks} />
           </div>
         )}
 
