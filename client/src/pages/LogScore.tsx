@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { getMyTeams, getTeamSummary, logEntry, getMemberEntries, MemberWithTrend } from '../api/teams';
-import { scoreColor, formatDate } from '../lib/scores';
+import { scoreColor, formatDate, scoreZoneLabel } from '../lib/scores';
 
 function suggestionAccent(s: number): string {
   if (s >= 8) return '#22C55E';
@@ -23,6 +23,13 @@ const SUGGESTIONS: Record<number, string> = {
   9: "What made this week so strong?",
   10: "What made this a perfect week — what do we protect?",
 };
+
+function getTeachingLine(score: number): string {
+  if (score >= 9) return "High scores deserve curiosity too. Ask what made this week different.";
+  if (score >= 7) return "Doing well doesn't mean nothing to explore. Ask what's working.";
+  if (score >= 4) return "Ask what would have made it one higher. Then just listen.";
+  return "They showed you something real. Respond with presence, not a plan.";
+}
 
 export default function LogScore() {
   const navigate = useNavigate();
@@ -166,6 +173,18 @@ export default function LogScore() {
                 }}
               >
                 <p className="text-sm italic text-zinc-300">{SUGGESTIONS[score]}</p>
+              </div>
+            )}
+
+            {/* Zone label + teaching moment */}
+            {score && (
+              <div className="text-center space-y-1 pt-1">
+                <p className="text-xs" style={{ color: 'rgba(180,180,255,0.3)' }}>
+                  {scoreZoneLabel(score)}
+                </p>
+                <p className="text-xs" style={{ color: 'rgba(180,180,255,0.3)' }}>
+                  {getTeachingLine(score)}
+                </p>
               </div>
             )}
           </div>
