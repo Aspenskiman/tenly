@@ -125,7 +125,7 @@ export default function LogScore() {
         {selectedMemberId && (
           <div className="space-y-2">
             <label className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">
-              What's their Tenly score?
+              {`How is ${selectedMember?.name.split(' ')[0] ?? 'your team member'}'s whole life this week?`}
             </label>
             <div className="grid grid-cols-5 gap-2">
               {[1,2,3,4,5,6,7,8,9,10].map(n => {
