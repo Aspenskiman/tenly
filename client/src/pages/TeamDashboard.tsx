@@ -22,7 +22,19 @@ const RANGES: { label: string; value: Range; weeks: number; days: number }[] = [
   { label: '1 Year',   value: '1yr', weeks: 52, days: 371 },
 ];
 
-function TeamTrendChart({ members, teamAvg }: { members: MemberWithTrend[]; teamAvg: number | null }) {
+function getISOWeekStart(dateStr: string): string {
+  const [y, mo, da] = dateStr.split('-').map(Number);
+  const d = new Date(y, mo - 1, da);
+  const day = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
+  d.setDate(d.getDate() + diff);
+  const yy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
+
+function TeamTrendChart({ members, teamAvg, weeks }: { members: MemberWithTrend[]; teamAvg: number | null; weeks: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<any>(null);
   const [hiddenIdx, setHiddenIdx] = useState<Set<number>>(new Set());
@@ -33,19 +45,26 @@ function TeamTrendChart({ members, teamAvg }: { members: MemberWithTrend[]; team
     function build() {
       if (cancelled || !canvasRef.current || !members.length) return;
 
-      const allDates = [
-        ...new Set(members.flatMap(m => m.entries.map(e => e.interaction_date.slice(0, 10)))),
-      ].sort();
-      if (!allDates.length) return;
+      // Collect all ISO week starts, sort, take last N weeks
+      const weekSet = new Set<string>();
+      members.forEach(m =>
+        m.entries.forEach(e =>
+          weekSet.add(getISOWeekStart(e.interaction_date.slice(0, 10)))
+        )
+      );
+      const allWeeks = [...weekSet].sort().slice(-weeks);
+      if (!allWeeks.length) return;
 
-      const labels = allDates.map(d => {
-        const [y, mo, da] = d.split('-').map(Number);
+      const labels = allWeeks.map(w => {
+        const [y, mo, da] = w.split('-').map(Number);
         return new Date(y, mo - 1, da).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       });
 
-      const avgData = allDates.map(date => {
+      const avgData = allWeeks.map(weekStart => {
         const scores = members.flatMap(m =>
-          m.entries.filter(e => e.interaction_date.slice(0, 10) === date).map(e => e.score)
+          m.entries
+            .filter(e => getISOWeekStart(e.interaction_date.slice(0, 10)) === weekStart)
+            .map(e => e.score)
         );
         return scores.length ? +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2) : null;
       });
@@ -66,9 +85,13 @@ function TeamTrendChart({ members, teamAvg }: { members: MemberWithTrend[]; team
 
       const memberDatasets = members.map((m, i) => ({
         label: m.name.split(' ')[0],
-        data: allDates.map(date => {
-          const e = m.entries.find(en => en.interaction_date.slice(0, 10) === date);
-          return e ? e.score : null;
+        data: allWeeks.map(weekStart => {
+          const weekEntries = m.entries.filter(e =>
+            getISOWeekStart(e.interaction_date.slice(0, 10)) === weekStart
+          );
+          return weekEntries.length
+            ? +(weekEntries.reduce((s, e) => s + e.score, 0) / weekEntries.length).toFixed(2)
+            : null;
         }),
         borderColor: CHART_COLORS[i % CHART_COLORS.length],
         backgroundColor: 'transparent',
@@ -154,7 +177,7 @@ function TeamTrendChart({ members, teamAvg }: { members: MemberWithTrend[]; team
       chartRef.current?.destroy();
       chartRef.current = null;
     };
-  }, [members, teamAvg]);
+  }, [members, teamAvg, weeks]);
 
   function toggleDataset(idx: number) {
     if (!chartRef.current) return;
