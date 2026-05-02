@@ -36,6 +36,7 @@ export default function LogScore() {
   const [score, setScore] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [saved, setSaved] = useState(false);
+  const [showNotePrompt, setShowNotePrompt] = useState(false);
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getMyTeams });
   const teamId = teams?.[0]?.id;
@@ -65,15 +66,18 @@ export default function LogScore() {
       interaction_date: new Date().toISOString(),
     }),
     onSuccess: () => {
+      const hadNoNotes = !notes.trim();
       qc.invalidateQueries({ queryKey: ['team-summary'] });
       qc.invalidateQueries({ queryKey: ['entries', selectedMemberId] });
       setSaved(true);
       setScore(null);
       setNotes('');
+      if (hadNoNotes) setShowNotePrompt(true);
       setTimeout(() => {
         setSaved(false);
+        setShowNotePrompt(false);
         navigate('/roster');
-      }, 1200);
+      }, hadNoNotes ? 2500 : 1200);
     },
   });
 
@@ -170,13 +174,13 @@ export default function LogScore() {
         {/* Notes */}
         {score !== null && (
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">Note (optional)</label>
+            <label className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">What do you want to remember from this conversation?</label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               maxLength={500}
               rows={3}
-              placeholder="What came up in the conversation?"
+              placeholder="Even one sentence helps you remember what mattered."
               className="w-full px-3 py-2.5 bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-xl text-sm text-white placeholder:text-[rgba(180,180,255,0.25)] focus:outline-none focus:border-zinc-600 resize-none"
             />
             <p className="text-xs text-[rgba(180,180,255,0.25)] text-right">{notes.length}/500</p>
@@ -196,6 +200,13 @@ export default function LogScore() {
         >
           {saved ? '✓ Logged' : logMutation.isPending ? 'Logging…' : score !== null ? `Log ${score}/10` : 'Select a score'}
         </button>
+
+        {/* Soft no-notes prompt */}
+        {showNotePrompt && (
+          <p className="text-xs text-center" style={{ color: 'rgba(180,180,255,0.3)' }}>
+            A quick note now saves the conversation later.
+          </p>
+        )}
 
         {/* Cancel */}
         <button
