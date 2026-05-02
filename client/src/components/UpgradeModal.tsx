@@ -65,7 +65,7 @@ export default function UpgradeModal({ onClose }: Props) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-white">Team</p>
-                <p className="text-xs text-[rgba(180,180,255,0.4)]">2–15 managers · Executive dashboard</p>
+                <p className="text-xs text-[rgba(180,180,255,0.4)]">2–15 leaders · Executive dashboard</p>
               </div>
               <p className="text-lg font-black text-white">$14<span className="text-xs font-normal text-[rgba(180,180,255,0.4)]">/mgr/mo</span></p>
             </div>

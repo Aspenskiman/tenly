@@ -158,7 +158,7 @@ function TeamCard({
       {/* Manager row */}
       <div className="flex items-center gap-2">
         <p className="text-xs flex-1" style={{ color: theme.textMute }}>
-          {manager ? manager.name : 'No manager assigned'}
+          {manager ? manager.name : 'No leader assigned'}
         </p>
         {!changingManager && (
           <button
@@ -178,12 +178,12 @@ function TeamCard({
               className="flex-1 px-2 py-1 rounded-lg text-white text-xs focus:outline-none"
               style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
             >
-              <option value="" disabled>Select manager…</option>
+              <option value="" disabled>Select leader…</option>
               {availableManagers.map(m => (
                 <option key={m.id} value={m.id}>{m.name} ({m.email})</option>
               ))}
               {availableManagers.length === 0 && (
-                <option disabled>No available managers</option>
+                <option disabled>No available leaders</option>
               )}
             </select>
             <button
@@ -205,7 +205,7 @@ function TeamCard({
           className="text-xs font-semibold px-3 py-1.5 rounded-lg transition"
           style={{ backgroundColor: `${theme.accent}20`, color: theme.accentLt, border: `1px solid ${theme.accent}40` }}
         >
-          Invite Manager
+          Invite Leader
         </button>
       )}
 
@@ -220,7 +220,7 @@ function TeamCard({
             value={inviteEmail}
             onChange={e => setInviteEmail(e.target.value)}
             required
-            placeholder="manager@company.com"
+            placeholder="leader@company.com"
             className="flex-1 px-3 py-1.5 rounded-lg text-white text-xs focus:outline-none"
             style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
           />
@@ -303,7 +303,7 @@ export default function CreatorDashboard() {
         {/* Stats strip */}
         <div className="flex gap-2 mb-8">
           <StatCard label="Teams" value={stats?.teamCount} />
-          <StatCard label="Managers" value={stats?.managerCount} />
+          <StatCard label="Leaders" value={stats?.managerCount} />
           <StatCard label="Members" value={stats?.memberCount} />
           <StatCard label="Pending Invites" value={stats?.pendingInviteCount} />
         </div>

@@ -17,7 +17,7 @@ const TIERS: {
     price: '$49',
     priceNote: '/month',
     limit: 'Up to 75 members',
-    features: ['Unlimited teams', 'Unlimited managers', 'Weekly digest email', 'Score history & trends'],
+    features: ['Unlimited teams', 'Unlimited leaders', 'Weekly digest email', 'Score history & trends'],
   },
   {
     id: 'team',
@@ -25,7 +25,7 @@ const TIERS: {
     price: '$99',
     priceNote: '/month',
     limit: 'Up to 150 members',
-    features: ['Unlimited teams', 'Unlimited managers', 'Executive dashboard', 'Company-wide analytics'],
+    features: ['Unlimited teams', 'Unlimited leaders', 'Executive dashboard', 'Company-wide analytics'],
   },
 ];
 

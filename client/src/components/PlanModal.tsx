@@ -19,14 +19,14 @@ const CREATOR_TIERS = {
     price: '$49',
     period: '/mo',
     members: 'Up to 75 members',
-    features: ['Unlimited teams', 'Unlimited managers', 'Weekly digest email', 'Score history & trends'],
+    features: ['Unlimited teams', 'Unlimited leaders', 'Weekly digest email', 'Score history & trends'],
   },
   team: {
     config: { label: 'Team', color: '#22C55E', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.3)' },
     price: '$99',
     period: '/mo',
     members: 'Up to 150 members',
-    features: ['Unlimited teams', 'Unlimited managers', 'Executive dashboard', 'Company-wide analytics'],
+    features: ['Unlimited teams', 'Unlimited leaders', 'Executive dashboard', 'Company-wide analytics'],
   },
 };
 

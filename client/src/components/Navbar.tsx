@@ -121,7 +121,7 @@ export default function Navbar() {
               return (
                 <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(124,111,247,0.08)', border: '1px solid rgba(124,111,247,0.2)', borderRadius: 8, padding: '2px 3px', gap: 2 }}>
                   <Link to="/creator-dashboard" style={tabStyle(onCreator)}>Creator</Link>
-                  <Link to="/dashboard" style={tabStyle(!onCreator)}>Team Manager</Link>
+                  <Link to="/dashboard" style={tabStyle(!onCreator)}>Team Leader</Link>
                 </div>
               );
             })()}
