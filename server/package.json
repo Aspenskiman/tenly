@@ -9,7 +9,8 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node dist/seed.js",
     "db:studio": "prisma studio",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "wipe": "npx ts-node prisma/wipe.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
