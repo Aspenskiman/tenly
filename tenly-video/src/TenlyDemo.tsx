@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence } from "remotion";
 import { bg } from "./theme";
 import { IntroLogo } from "./scenes/IntroLogo";
 import { WrongQuestion } from "./scenes/WrongQuestion";
+import { OutroScene } from "./scenes/OutroScene";
 
 const Placeholder: React.FC<{ readonly label: string; readonly color: string }> = ({
   label,
@@ -37,7 +38,7 @@ export const TenlyDemo: React.FC = () => {
         <Placeholder label="Scene 4 — Dashboard (33–50s)" color={bg} />
       </Sequence>
       <Sequence from={1500} durationInFrames={300} layout="none">
-        <Placeholder label="Scene 5 — Outro (50–60s)" color="#000" />
+        <OutroScene />
       </Sequence>
     </AbsoluteFill>
   );
