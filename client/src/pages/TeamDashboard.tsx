@@ -14,25 +14,13 @@ import { theme } from '../lib/theme';
 
 const CHART_COLORS = ['#A78BFA','#34D399','#60A5FA','#F472B6','#FBBF24','#F87171','#38BDF8','#A3E635'];
 
-type Range = '1mo' | '3mo' | '6mo' | '1yr';
+type Range = '4w' | '8w' | '12w' | '16w';
 const RANGES: { label: string; value: Range; weeks: number; days: number }[] = [
-  { label: '1 Month',  value: '1mo', weeks: 4,  days: 35  },
-  { label: '3 Months', value: '3mo', weeks: 12, days: 91  },
-  { label: '6 Months', value: '6mo', weeks: 26, days: 189 },
-  { label: '1 Year',   value: '1yr', weeks: 52, days: 371 },
+  { label: '4w',  value: '4w',  weeks: 4,  days: 35  },
+  { label: '8w',  value: '8w',  weeks: 8,  days: 63  },
+  { label: '12w', value: '12w', weeks: 12, days: 91  },
+  { label: '16w', value: '16w', weeks: 16, days: 119 },
 ];
-
-function getISOWeekStart(dateStr: string): string {
-  const [y, mo, da] = dateStr.split('-').map(Number);
-  const d = new Date(y, mo - 1, da);
-  const day = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
-  d.setDate(d.getDate() + diff);
-  const yy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yy}-${mm}-${dd}`;
-}
 
 function TeamTrendChart({ members, teamAvg, weeks }: { members: MemberWithTrend[]; teamAvg: number | null; weeks: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -45,29 +33,44 @@ function TeamTrendChart({ members, teamAvg, weeks }: { members: MemberWithTrend[
     function build() {
       if (cancelled || !canvasRef.current || !members.length) return;
 
-      // Collect all ISO week starts, sort, take last N weeks
-      const weekSet = new Set<string>();
-      members.forEach(m =>
-        m.entries.forEach(e =>
-          weekSet.add(getISOWeekStart(e.interaction_date.slice(0, 10)))
-        )
-      );
-      const allWeeks = [...weekSet].sort().slice(-weeks);
-      if (!allWeeks.length) return;
+      // Days-since-UTC-epoch helpers (timezone-safe)
+      function dateToDays(dateStr: string): number {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+      }
+      function isoWeekStartDays(days: number): number {
+        const dow = new Date(days * 86400000).getUTCDay();
+        return days - (dow === 0 ? 6 : dow - 1);
+      }
+      function fmtDays(days: number): string {
+        return new Date(days * 86400000).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', timeZone: 'UTC',
+        });
+      }
 
-      const labels = allWeeks.map(w => {
-        const [y, mo, da] = w.split('-').map(Number);
-        return new Date(y, mo - 1, da).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      });
+      const todayDays = Math.floor(Date.now() / 86400000);
+      const cutoffDays = todayDays - weeks * 7;
 
-      const avgData = allWeeks.map(weekStart => {
-        const scores = members.flatMap(m =>
-          m.entries
-            .filter(e => getISOWeekStart(e.interaction_date.slice(0, 10)) === weekStart)
-            .map(e => e.score)
-        );
-        return scores.length ? +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2) : null;
-      });
+      // ISO week starts within the window → x-axis tick positions
+      const weekStarts: number[] = [];
+      let ws = isoWeekStartDays(cutoffDays);
+      if (ws < cutoffDays) ws += 7;
+      while (ws <= todayDays) { weekStarts.push(ws); ws += 7; }
+      if (!weekStarts.length) return;
+
+      // Team avg: one averaged point per week at the week-start x position
+      const avgData = weekStarts
+        .map(weekStart => {
+          const scores = members.flatMap(m =>
+            m.entries
+              .filter(e => { const d = dateToDays(e.interaction_date.slice(0, 10)); return d >= weekStart && d < weekStart + 7; })
+              .map(e => e.score)
+          );
+          return scores.length
+            ? { x: weekStart, y: +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2) }
+            : null;
+        })
+        .filter((p): p is { x: number; y: number } => p !== null);
 
       const avgDataset = {
         label: `Team avg ${teamAvg !== null ? teamAvg.toFixed(1) : '—'}`,
@@ -76,30 +79,27 @@ function TeamTrendChart({ members, teamAvg, weeks }: { members: MemberWithTrend[
         backgroundColor: 'rgba(255,255,255,0.04)',
         borderWidth: 3,
         tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        spanGaps: true,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        spanGaps: false,
         fill: true,
         order: 0,
       };
 
+      // Member datasets: every individual entry as its own dot, in date order
       const memberDatasets = members.map((m, i) => ({
         label: m.name.split(' ')[0],
-        data: allWeeks.map(weekStart => {
-          const weekEntries = m.entries.filter(e =>
-            getISOWeekStart(e.interaction_date.slice(0, 10)) === weekStart
-          );
-          return weekEntries.length
-            ? +(weekEntries.reduce((s, e) => s + e.score, 0) / weekEntries.length).toFixed(2)
-            : null;
-        }),
+        data: m.entries
+          .filter(e => dateToDays(e.interaction_date.slice(0, 10)) > cutoffDays)
+          .sort((a, b) => a.interaction_date.localeCompare(b.interaction_date))
+          .map(e => ({ x: dateToDays(e.interaction_date.slice(0, 10)), y: e.score })),
         borderColor: CHART_COLORS[i % CHART_COLORS.length],
         backgroundColor: 'transparent',
         borderWidth: 1.5,
         tension: 0,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        spanGaps: true,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        spanGaps: false,
         fill: false,
         order: i + 1,
       }));
@@ -112,11 +112,11 @@ function TeamTrendChart({ members, teamAvg, weeks }: { members: MemberWithTrend[
 
       chartRef.current = new C(canvasRef.current, {
         type: 'line',
-        data: { labels, datasets: [avgDataset, ...memberDatasets] },
+        data: { datasets: [avgDataset, ...memberDatasets] },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
+          interaction: { mode: 'nearest', intersect: false },
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -126,16 +126,23 @@ function TeamTrendChart({ members, teamAvg, weeks }: { members: MemberWithTrend[
               titleColor: 'rgba(180,180,255,0.55)',
               bodyColor: '#fff',
               padding: 10,
+              callbacks: {
+                title: (items: any[]) => items.length ? fmtDays(items[0].parsed.x) : '',
+              },
             },
           },
           scales: {
             x: {
+              type: 'linear',
+              min: cutoffDays,
+              max: todayDays,
               border: { display: false },
               grid: { display: false },
+              afterBuildTicks: (scale: any) => { scale.ticks = weekStarts.map(v => ({ value: v })); },
               ticks: {
                 color: 'rgba(180,180,255,0.55)',
-                maxTicksLimit: 7,
                 font: { size: 10 },
+                callback: (val: any) => fmtDays(+val),
               },
             },
             y: {
@@ -286,7 +293,7 @@ function MemberRow({ member }: { member: MemberWithTrend }) {
 
 export default function TeamDashboard() {
   const navigate = useNavigate();
-  const [range, setRange] = useState<Range>('1mo');
+  const [range, setRange] = useState<Range>('4w');
   const rangeObj = RANGES.find(r => r.value === range)!;
 
   const { data: teams, isLoading } = useQuery({ queryKey: ['teams'], queryFn: getMyTeams });
