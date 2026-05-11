@@ -15,6 +15,13 @@ const RANGES: { label: string; value: Range; weeks: number; days: number }[] = [
   { label: '16w', value: '16w', weeks: 16, days: 119 },
 ];
 
+function formatFullDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  });
+}
+
 function MemberChart({ entries, avg, color, weeks }: {
   entries: HappinessEntry[];
   avg: number | null;
@@ -177,6 +184,7 @@ export default function MemberDashboard() {
   const { memberId } = useParams<{ memberId: string }>();
   const navigate = useNavigate();
   const [range, setRange] = useState<Range>('4w');
+  const [selectedEntry, setSelectedEntry] = useState<HappinessEntry | null>(null);
 
   const rangeObj = RANGES.find(r => r.value === range)!;
 
@@ -330,7 +338,11 @@ export default function MemberDashboard() {
             <p className="text-xs font-semibold text-[rgba(180,180,255,0.5)] uppercase tracking-wider">Check-in history</p>
             <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl divide-y divide-zinc-800">
               {[...entries].reverse().map(e => (
-                <div key={e.id} className="flex items-start gap-3 px-4 py-3">
+                <div
+                  key={e.id}
+                  className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[#1A1A35]/40 transition"
+                  onClick={() => setSelectedEntry(e)}
+                >
                   <span
                     className="text-lg font-black shrink-0 w-8 text-center"
                     style={{ color: scoreColor(e.score) }}
@@ -347,6 +359,62 @@ export default function MemberDashboard() {
           </div>
         )}
       </div>
+
+      {/* Entry detail bottom sheet */}
+      {selectedEntry && (
+        <>
+          <div
+            className="fixed inset-0 z-50"
+            style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+            onClick={() => setSelectedEntry(null)}
+          />
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 overflow-y-auto"
+            style={{
+              maxHeight: '70vh',
+              backgroundColor: '#13132A',
+              border: '1px solid rgba(124,111,247,0.2)',
+              borderBottom: 'none',
+              borderRadius: '20px 20px 0 0',
+            }}
+          >
+            <div className="p-5">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
+                    style={{
+                      border: `2px solid ${scoreColor(selectedEntry.score)}`,
+                      boxShadow: `0 0 20px ${scoreColor(selectedEntry.score)}40`,
+                    }}
+                  >
+                    <span className="text-2xl font-black" style={{ color: scoreColor(selectedEntry.score) }}>
+                      {selectedEntry.score}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-white font-bold">{scoreZoneLabel(selectedEntry.score)}</p>
+                    <p className="text-xs text-[rgba(180,180,255,0.4)] mt-0.5">
+                      {formatFullDate(selectedEntry.interaction_date)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedEntry(null)}
+                  className="text-[rgba(180,180,255,0.4)] hover:text-white transition text-2xl leading-none p-1 -mt-1"
+                >
+                  ×
+                </button>
+              </div>
+              {selectedEntry.notes ? (
+                <p className="text-sm text-zinc-300 leading-relaxed">{selectedEntry.notes}</p>
+              ) : (
+                <p className="text-sm italic" style={{ color: 'rgba(180,180,255,0.25)' }}>No notes recorded.</p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </Layout>
   );
 }
