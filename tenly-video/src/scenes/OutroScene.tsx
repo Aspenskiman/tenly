@@ -1,5 +1,6 @@
 import {
   AbsoluteFill,
+  Freeze,
   Img,
   interpolate,
   spring,
@@ -15,6 +16,16 @@ import {
   textMuted,
   textWhite,
 } from "../theme";
+import { DashboardScene } from "./DashboardScene";
+
+// Frame inside DashboardScene at which to freeze the background.
+// 500 = after all content (chart, story, check-in rows) has settled
+// and before any fade-out would have started.
+const DASHBOARD_FREEZE_FRAME = 500;
+
+// Dim overlay strength on top of the frozen Dashboard. 0.6 = 60% black,
+// so the dashboard shows through at ~40%.
+const OVERLAY_OPACITY = 0.6;
 
 const { fontFamily } = loadFont("normal", {
   weights: ["400", "500", "600", "700", "800"],
@@ -47,16 +58,44 @@ export const OutroScene: React.FC = () => {
     extrapolateRight: "clamp",
   });
 
+  // Dim overlay fades in over the first 30 frames so the transition from
+  // live Scene 4 to overlaid Scene 4 is smooth.
+  const overlayOpacity = interpolate(
+    frame,
+    [0, 30],
+    [0, OVERLAY_OPACITY],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: "#000",
         fontFamily: fontFamily ?? fontInter,
         color: textWhite,
-        alignItems: "center",
-        justifyContent: "center",
       }}
     >
+      {/* Frozen Dashboard as background */}
+      <Freeze frame={DASHBOARD_FREEZE_FRAME}>
+        <DashboardScene />
+      </Freeze>
+
+      {/* Dim overlay on top of Dashboard */}
+      <AbsoluteFill
+        style={{
+          backgroundColor: "#000",
+          opacity: overlayOpacity,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Outro content layered above */}
+      <AbsoluteFill
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}
+      >
       <div
         style={{
           display: "flex",
@@ -109,6 +148,7 @@ export const OutroScene: React.FC = () => {
           www.tenly.us
         </div>
       </div>
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };

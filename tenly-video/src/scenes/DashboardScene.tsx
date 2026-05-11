@@ -111,11 +111,10 @@ export const DashboardScene: React.FC = () => {
     extrapolateRight: "clamp",
   });
 
-  // Cross-fade to outro — local 510–540.
-  const fadeOutOpacity = interpolate(frame, [510, 540], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // No fade-to-black at end: the outro overlays this scene with its own
+  // dimming layer so we want Scene 4 to stay fully visible right up to
+  // its final frame.
+  const fadeOutOpacity = 0;
 
   return (
     <AbsoluteFill
