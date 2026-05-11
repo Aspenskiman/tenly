@@ -63,15 +63,34 @@ export const IntroLogo: React.FC = () => {
           gap: 56,
         }}
       >
-        <Img
-          src={staticFile("tenlyiconapp.svg")}
+        <div
           style={{
-            width: 280,
-            height: 280,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 24,
             opacity: logoOpacity,
             transform: `scale(${logoScale})`,
           }}
-        />
+        >
+          <Img
+            src={staticFile("tenlyiconapp.svg")}
+            style={{
+              width: 280,
+              height: 280,
+            }}
+          />
+          <div
+            style={{
+              fontSize: 88,
+              fontWeight: 800,
+              letterSpacing: -2,
+              color: textWhite,
+            }}
+          >
+            Tenly
+          </div>
+        </div>
 
         <div
           style={{
