@@ -83,7 +83,7 @@ export const OutroScene: React.FC = () => {
             opacity: stopOpacity,
           }}
         >
-          Stop asking how they're doing.
+          The new question is
         </div>
 
         <div
@@ -94,7 +94,7 @@ export const OutroScene: React.FC = () => {
             color: accentViolet,
           }}
         >
-          Start knowing.
+          What's your Tenly score?
         </div>
 
         <div
@@ -106,7 +106,7 @@ export const OutroScene: React.FC = () => {
             marginTop: 24,
           }}
         >
-          tenly.app
+          www.tenly.us
         </div>
       </div>
     </AbsoluteFill>
