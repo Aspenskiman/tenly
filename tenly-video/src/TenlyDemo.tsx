@@ -18,10 +18,10 @@ export const TenlyDemo: React.FC = () => {
       <Sequence from={390} durationInFrames={600} layout="none">
         <LogScoreScene />
       </Sequence>
-      <Sequence from={990} durationInFrames={510} layout="none">
+      <Sequence from={990} durationInFrames={540} layout="none">
         <DashboardScene />
       </Sequence>
-      <Sequence from={1500} durationInFrames={300} layout="none">
+      <Sequence from={1530} durationInFrames={270} layout="none">
         <OutroScene />
       </Sequence>
     </AbsoluteFill>

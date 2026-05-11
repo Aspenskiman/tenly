@@ -33,6 +33,30 @@ const RANGES: { readonly label: string; readonly highlighted: boolean }[] = [
   { label: "16w", highlighted: false },
 ];
 
+// Three most-recent check-ins shown below Story So Far.
+// Most recent first. Scores align with the tail of TREND_DATA in TrendChart.
+const RECENT_ENTRIES: {
+  readonly score: number;
+  readonly note: string;
+  readonly date: string;
+}[] = [
+  {
+    score: 8,
+    note: "Found her rhythm on the migration. Energy back.",
+    date: "May 8",
+  },
+  {
+    score: 7,
+    note: "Great talk about long-term path. Loves mentoring the juniors.",
+    date: "May 1",
+  },
+  {
+    score: 8,
+    note: "Excited about Q3 plans. Asked for a stretch project.",
+    date: "Apr 24",
+  },
+];
+
 export const DashboardScene: React.FC = () => {
   const frame = useCurrentFrame(); // local 0..509
   const { fps } = useVideoConfig();
@@ -69,20 +93,26 @@ export const DashboardScene: React.FC = () => {
     extrapolateRight: "clamp",
   });
 
-  // Story So Far card — local 390–450.
+  // Story So Far card — local 390–440 (tightened to make room for check-in history).
   const storySpring = spring({
     frame: frame - 390,
     fps,
     config: springConfig,
   });
-  const storyOpacity = interpolate(frame, [390, 450], [0, 1], {
+  const storyOpacity = interpolate(frame, [390, 440], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
   const storyTranslate = (1 - storySpring) * 20;
 
-  // Cross-fade to outro — local 480–510.
-  const fadeOutOpacity = interpolate(frame, [480, 510], [0, 1], {
+  // Check-in history label — local 420–440.
+  const checkinLabelOpacity = interpolate(frame, [420, 440], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  // Cross-fade to outro — local 510–540.
+  const fadeOutOpacity = interpolate(frame, [510, 540], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -257,6 +287,106 @@ export const DashboardScene: React.FC = () => {
           In the last 12 weeks, Maya has averaged {AVG_SCORE.toFixed(1)} —
           currently in the {scoreZoneLabel(LATEST_SCORE)} zone.{" "}
           {CHECKIN_COUNT} check-ins total. Lowest score was a 4 on Mar 23.
+        </div>
+
+        {/* Check-in history with notes — the meaning behind the scores */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+            opacity: checkinLabelOpacity,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 600,
+              color: textLabel,
+              textTransform: "uppercase",
+              letterSpacing: 2,
+            }}
+          >
+            Check-in history
+          </div>
+          <div
+            style={{
+              backgroundColor: surface,
+              border: `1px solid ${border}`,
+              borderRadius: 18,
+              overflow: "hidden",
+            }}
+          >
+            {RECENT_ENTRIES.map((entry, i) => {
+              // Rows stagger in starting at f 435, each 15f apart, fade over 25f.
+              const rowStart = 435 + i * 15;
+              const rowOpacity = interpolate(
+                frame,
+                [rowStart, rowStart + 25],
+                [0, 1],
+                {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                },
+              );
+              const rowTranslate = interpolate(
+                frame,
+                [rowStart, rowStart + 25],
+                [12, 0],
+                {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                },
+              );
+              return (
+                <div
+                  key={entry.date}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 18,
+                    padding: "18px 24px",
+                    borderTop: i === 0 ? "none" : `1px solid ${border}`,
+                    opacity: rowOpacity,
+                    transform: `translateY(${rowTranslate}px)`,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 32,
+                      fontWeight: 900,
+                      color: scoreColor(entry.score),
+                      width: 40,
+                      textAlign: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {entry.score}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 24,
+                        color: "#d4d4d8",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {entry.note}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 18,
+                        color: textFaint,
+                        marginTop: 4,
+                      }}
+                    >
+                      {entry.date}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

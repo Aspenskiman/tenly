@@ -23,6 +23,8 @@ import {
 const MEMBER_NAME = "Maya Chen";
 const SELECTED_SCORE = 7;
 const NUDGE_TEXT = "What's been working well for you lately?";
+const NOTE_TEXT =
+  "Strong week — project launch landed. Wants more ownership next quarter.";
 
 export const LogScoreScene: React.FC = () => {
   const frame = useCurrentFrame(); // local 0..599
@@ -88,6 +90,24 @@ export const LogScoreScene: React.FC = () => {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+
+  // Notes field — label + empty textarea fade in local 440–470.
+  const notesFieldOpacity = interpolate(frame, [440, 470], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  // Typewriter — characters revealed local 470–560.
+  const typedCount = Math.round(
+    interpolate(frame, [470, 560], [0, NOTE_TEXT.length], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    }),
+  );
+  const typedText = NOTE_TEXT.slice(0, typedCount);
+  // Blinking cursor caret — show while typing, blink after.
+  const cursorVisible =
+    frame < 560 ? true : Math.floor((frame - 560) / 15) % 2 === 0;
 
   // Breathing animation on selected button — local 430–600. 1.05 ↔ 1.06 sine.
   const breathe =
@@ -306,6 +326,45 @@ export const LogScoreScene: React.FC = () => {
           <div style={{ fontSize: 22, color: textMuted }}>Sweet Spot</div>
           <div style={{ fontSize: 22, color: textMuted }}>
             Doing well doesn't mean nothing to explore. Ask what's working.
+          </div>
+        </div>
+
+        {/* Notes field — typewriter */}
+        <div style={{ opacity: notesFieldOpacity }}>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 600,
+              color: textLabel,
+              textTransform: "uppercase",
+              letterSpacing: 2,
+              marginBottom: 12,
+            }}
+          >
+            What do you want to remember from this conversation?
+          </div>
+          <div
+            style={{
+              padding: "22px 24px",
+              backgroundColor: cardBg,
+              border: `1px solid ${border}`,
+              borderRadius: 18,
+              minHeight: 140,
+              fontSize: 28,
+              color: textWhite,
+              lineHeight: 1.45,
+            }}
+          >
+            {typedText}
+            <span
+              style={{
+                opacity: cursorVisible ? 1 : 0,
+                color: accentViolet,
+                marginLeft: 2,
+              }}
+            >
+              |
+            </span>
           </div>
         </div>
       </div>
