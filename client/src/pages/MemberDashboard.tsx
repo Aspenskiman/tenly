@@ -1,41 +1,182 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  ReferenceLine, CartesianGrid,
-} from 'recharts';
 import Layout from '../components/Layout';
-import { getMemberEntries, getMyTeams, getTeamSummary } from '../api/teams';
+import { getMemberEntries, getMyTeams, getTeamSummary, HappinessEntry } from '../api/teams';
 import {
   scoreColor, trendArrow, trendColor, scoreZoneLabel, formatDate, formatDateLong,
 } from '../lib/scores';
 
-type Range = '7d' | '30d' | '90d' | '12mo';
-
-const RANGES: { label: string; value: Range; days: number }[] = [
-  { label: '7d', value: '7d', days: 7 },
-  { label: '30d', value: '30d', days: 30 },
-  { label: '90d', value: '90d', days: 90 },
-  { label: '12mo', value: '12mo', days: 365 },
+type Range = '4w' | '8w' | '12w' | '16w';
+const RANGES: { label: string; value: Range; weeks: number; days: number }[] = [
+  { label: '4w',  value: '4w',  weeks: 4,  days: 35  },
+  { label: '8w',  value: '8w',  weeks: 8,  days: 63  },
+  { label: '12w', value: '12w', weeks: 12, days: 91  },
+  { label: '16w', value: '16w', weeks: 16, days: 119 },
 ];
 
-function CustomTooltip({ active, payload }: any) {
-  if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div className="bg-[#13132A] border border-[rgba(124,111,247,0.2)] rounded-xl px-3 py-2 text-xs shadow-xl">
-      <p className="text-[rgba(180,180,255,0.5)]">{d.fullDate}</p>
-      <p className="text-white font-black text-base">{d.score}/10</p>
-      {d.notes && <p className="text-[rgba(180,180,255,0.35)] max-w-[160px] truncate mt-0.5">{d.notes}</p>}
-    </div>
-  );
+function MemberChart({ entries, avg, color, weeks }: {
+  entries: HappinessEntry[];
+  avg: number | null;
+  color: string;
+  weeks: number;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chartRef = useRef<any>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    function build() {
+      if (cancelled || !canvasRef.current) return;
+
+      function dateToDays(dateStr: string): number {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+      }
+      function isoWeekStartDays(days: number): number {
+        const dow = new Date(days * 86400000).getUTCDay();
+        return days - (dow === 0 ? 6 : dow - 1);
+      }
+      function fmtDays(days: number): string {
+        return new Date(days * 86400000).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', timeZone: 'UTC',
+        });
+      }
+
+      const todayDays = Math.floor(Date.now() / 86400000);
+      const cutoffDays = todayDays - weeks * 7;
+
+      const weekStarts: number[] = [];
+      let ws = isoWeekStartDays(cutoffDays);
+      if (ws < cutoffDays) ws += 7;
+      while (ws <= todayDays) { weekStarts.push(ws); ws += 7; }
+
+      const memberData = entries
+        .filter(e => dateToDays(e.interaction_date.slice(0, 10)) > cutoffDays)
+        .sort((a, b) => a.interaction_date.localeCompare(b.interaction_date))
+        .map(e => ({ x: dateToDays(e.interaction_date.slice(0, 10)), y: e.score, notes: e.notes }));
+
+      const datasets: any[] = [
+        {
+          data: memberData,
+          borderColor: color,
+          backgroundColor: color + '20',
+          borderWidth: 2,
+          tension: 0,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          spanGaps: false,
+          fill: true,
+          order: 0,
+        },
+      ];
+
+      if (avg !== null) {
+        datasets.push({
+          data: [{ x: cutoffDays, y: avg }, { x: todayDays, y: avg }],
+          borderColor: '#52525b',
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          spanGaps: true,
+          fill: false,
+          order: 1,
+        });
+      }
+
+      chartRef.current?.destroy();
+      chartRef.current = null;
+
+      const C = (window as any).Chart;
+      if (!C) return;
+
+      chartRef.current = new C(canvasRef.current, {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'nearest', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#13132A',
+              borderColor: 'rgba(124,111,247,0.2)',
+              borderWidth: 1,
+              titleColor: 'rgba(180,180,255,0.5)',
+              bodyColor: '#fff',
+              padding: 10,
+              filter: (item: any) => item.datasetIndex === 0,
+              callbacks: {
+                title: (items: any[]) => items.length ? fmtDays(items[0].parsed.x) : '',
+                label: (item: any) => {
+                  const pt = item.dataset.data[item.dataIndex] as any;
+                  const score = `${item.parsed.y}/10`;
+                  return pt?.notes ? `${score} — ${pt.notes}` : score;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              min: cutoffDays,
+              max: todayDays,
+              border: { display: false },
+              grid: { display: false },
+              afterBuildTicks: (scale: any) => { scale.ticks = weekStarts.map(v => ({ value: v })); },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (val: any) => fmtDays(+val),
+              },
+            },
+            y: {
+              min: 1,
+              max: 10,
+              border: { display: false },
+              grid: { color: '#27272C' },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                stepSize: 2,
+                callback: (v: any) => [1, 3, 5, 7, 9].includes(+v) ? v : '',
+              },
+            },
+          },
+        },
+      });
+    }
+
+    if ((window as any).Chart) {
+      build();
+    } else if (!document.querySelector('script[data-chartjs]')) {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
+      s.setAttribute('data-chartjs', '');
+      s.onload = build;
+      document.head.appendChild(s);
+    } else {
+      document.querySelector('script[data-chartjs]')!.addEventListener('load', build, { once: true });
+    }
+
+    return () => {
+      cancelled = true;
+      chartRef.current?.destroy();
+      chartRef.current = null;
+    };
+  }, [entries, avg, color, weeks]);
+
+  return <canvas ref={canvasRef} />;
 }
 
 export default function MemberDashboard() {
   const { memberId } = useParams<{ memberId: string }>();
   const navigate = useNavigate();
-  const [range, setRange] = useState<Range>('30d');
+  const [range, setRange] = useState<Range>('4w');
 
   const rangeObj = RANGES.find(r => r.value === range)!;
 
@@ -45,7 +186,6 @@ export default function MemberDashboard() {
     enabled: !!memberId,
   });
 
-  // Get member info from teams
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getMyTeams });
   const teamId = teams?.[0]?.id;
   const { data: summary } = useQuery({
@@ -56,13 +196,6 @@ export default function MemberDashboard() {
   });
   const member = summary?.members.find(m => m.id === memberId);
 
-  const chartData = entries.map(e => ({
-    date: formatDate(e.interaction_date),
-    fullDate: formatDateLong(e.interaction_date),
-    score: e.score,
-    notes: e.notes,
-  }));
-
   const avg = entries.length
     ? (entries.reduce((s, e) => s + e.score, 0) / entries.length)
     : null;
@@ -70,13 +203,14 @@ export default function MemberDashboard() {
   const latestScore = entries[entries.length - 1]?.score ?? null;
   const trend = member?.trend ?? 'insufficient_data';
 
-  // Story So Far — appears after 4+ entries
   const storySoFar = entries.length >= 4 && avg !== null ? (() => {
     const low = Math.min(...entries.map(e => e.score));
     const lowEntry = entries.find(e => e.score === low);
     const zone = scoreZoneLabel(avg);
     return `In the last ${rangeObj.days} days, ${member?.name ?? 'this member'} has averaged ${avg.toFixed(1)} — currently in the ${zone} zone. ${entries.length} check-ins total. Lowest score was a ${low}${lowEntry ? ` on ${formatDate(lowEntry.interaction_date)}` : ''}.`;
   })() : null;
+
+  const chartColor = latestScore ? scoreColor(latestScore) : '#818CF8';
 
   if (entriesLoading) {
     return (
@@ -164,36 +298,13 @@ export default function MemberDashboard() {
         </div>
 
         {/* Chart */}
-        {chartData.length > 1 ? (
+        {entries.length > 1 ? (
           <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl p-4">
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={chartData} margin={{ top: 8, right: 4, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={latestScore ? scoreColor(latestScore) : '#818CF8'} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={latestScore ? scoreColor(latestScore) : '#818CF8'} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272C" />
-                <XAxis dataKey="date" tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} />
-                <YAxis domain={[1, 10]} tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} ticks={[1,3,5,7,9]} />
-                {avg !== null && (
-                  <ReferenceLine y={avg} stroke="#52525b" strokeDasharray="4 4" />
-                )}
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="score"
-                  stroke={latestScore ? scoreColor(latestScore) : '#818CF8'}
-                  strokeWidth={2}
-                  fill="url(#scoreGrad)"
-                  dot={{ fill: latestScore ? scoreColor(latestScore) : '#818CF8', r: 3, strokeWidth: 0 }}
-                  activeDot={{ r: 5, strokeWidth: 0 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div style={{ height: 180 }}>
+              <MemberChart entries={entries} avg={avg} color={chartColor} weeks={rangeObj.weeks} />
+            </div>
           </div>
-        ) : chartData.length === 1 ? (
+        ) : entries.length === 1 ? (
           <div className="bg-[#13132A] border border-[rgba(124,111,247,0.15)] rounded-2xl p-5 text-center text-[rgba(180,180,255,0.35)] text-sm">
             Only 1 entry — log more to see trends.
           </div>
