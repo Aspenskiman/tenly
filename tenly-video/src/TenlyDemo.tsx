@@ -3,6 +3,7 @@ import { bg } from "./theme";
 import { IntroLogo } from "./scenes/IntroLogo";
 import { WrongQuestion } from "./scenes/WrongQuestion";
 import { OutroScene } from "./scenes/OutroScene";
+import { LogScoreScene } from "./scenes/LogScoreScene";
 
 const Placeholder: React.FC<{ readonly label: string; readonly color: string }> = ({
   label,
@@ -32,7 +33,7 @@ export const TenlyDemo: React.FC = () => {
         <WrongQuestion />
       </Sequence>
       <Sequence from={390} durationInFrames={600} layout="none">
-        <Placeholder label="Scene 3 — LogScore (13–33s)" color={bg} />
+        <LogScoreScene />
       </Sequence>
       <Sequence from={990} durationInFrames={510} layout="none">
         <Placeholder label="Scene 4 — Dashboard (33–50s)" color={bg} />
