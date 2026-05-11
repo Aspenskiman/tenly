@@ -16,7 +16,7 @@ const RANGES: { label: string; value: Range; weeks: number; days: number }[] = [
 ];
 
 function formatFullDate(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number);
+  const [y, m, d] = dateStr.slice(0, 10).split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
