@@ -4,24 +4,7 @@ import { IntroLogo } from "./scenes/IntroLogo";
 import { WrongQuestion } from "./scenes/WrongQuestion";
 import { OutroScene } from "./scenes/OutroScene";
 import { LogScoreScene } from "./scenes/LogScoreScene";
-
-const Placeholder: React.FC<{ readonly label: string; readonly color: string }> = ({
-  label,
-  color,
-}) => (
-  <AbsoluteFill
-    style={{
-      backgroundColor: color,
-      color: "white",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: 48,
-      fontFamily: "sans-serif",
-    }}
-  >
-    {label}
-  </AbsoluteFill>
-);
+import { DashboardScene } from "./scenes/DashboardScene";
 
 export const TenlyDemo: React.FC = () => {
   return (
@@ -36,7 +19,7 @@ export const TenlyDemo: React.FC = () => {
         <LogScoreScene />
       </Sequence>
       <Sequence from={990} durationInFrames={510} layout="none">
-        <Placeholder label="Scene 4 — Dashboard (33–50s)" color={bg} />
+        <DashboardScene />
       </Sequence>
       <Sequence from={1500} durationInFrames={300} layout="none">
         <OutroScene />
