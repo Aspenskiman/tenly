@@ -8,7 +8,7 @@ import {
 import Layout from '../components/Layout';
 import { getMyTeams, getTeamSummary, MemberWithTrend } from '../api/teams';
 import {
-  scoreColor, trendArrow, trendColor, scoreZoneLabel, formatDate,
+  scoreColor, trendArrow, trendColor, formatDate,
 } from '../lib/scores';
 import { theme } from '../lib/theme';
 
@@ -352,9 +352,6 @@ export default function TeamDashboard() {
                   {teamAvg !== null ? teamAvg.toFixed(1) : '—'}
                 </span>
               </div>
-              {teamAvg && (
-                <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{scoreZoneLabel(Math.round(teamAvg))}</p>
-              )}
             </div>
             <div className="text-right">
               <p className="text-xs text-[rgba(180,180,255,0.25)]">{members.length} members</p>

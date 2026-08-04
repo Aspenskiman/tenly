@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { getMyTeams, getTeamSummary, MemberWithTrend } from '../api/teams';
-import { scoreColor, trendArrow, trendColor, scoreZoneLabel } from '../lib/scores';
+import { scoreColor, trendArrow, trendColor } from '../lib/scores';
 
 function DigestMemberRow({ member }: { member: MemberWithTrend }) {
   const navigate = useNavigate();
@@ -19,9 +19,6 @@ function DigestMemberRow({ member }: { member: MemberWithTrend }) {
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-white truncate">{member.name}</p>
-        {score !== null && (
-          <p className="text-xs text-[rgba(180,180,255,0.35)] mt-0.5">{scoreZoneLabel(Math.round(score))}</p>
-        )}
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
