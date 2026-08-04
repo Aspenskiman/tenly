@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { getMemberEntries, getMyTeams, getTeamSummary, HappinessEntry } from '../api/teams';
 import {
-  scoreColor, trendArrow, trendColor, scoreZoneLabel, formatDate, formatDateLong,
+  scoreColor, trendArrow, trendColor, formatDate, formatDateLong,
 } from '../lib/scores';
 
 type Range = '4w' | '8w' | '12w' | '16w';
@@ -214,8 +214,7 @@ export default function MemberDashboard() {
   const storySoFar = entries.length >= 4 && avg !== null ? (() => {
     const low = Math.min(...entries.map(e => e.score));
     const lowEntry = entries.find(e => e.score === low);
-    const zone = scoreZoneLabel(avg);
-    return `In the last ${rangeObj.days} days, ${member?.name ?? 'this member'} has averaged ${avg.toFixed(1)} — currently in the ${zone} zone. ${entries.length} check-ins total. Lowest score was a ${low}${lowEntry ? ` on ${formatDate(lowEntry.interaction_date)}` : ''}.`;
+    return `In the last ${rangeObj.days} days, ${member?.name ?? 'this member'} has averaged ${avg.toFixed(1)}. ${entries.length} check-ins total. Lowest score was a ${low}${lowEntry ? ` on ${formatDate(lowEntry.interaction_date)}` : ''}.`;
   })() : null;
 
   const chartColor = latestScore ? scoreColor(latestScore) : '#818CF8';
@@ -252,7 +251,9 @@ export default function MemberDashboard() {
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center"
               style={{
-                boxShadow: latestScore ? `0 0 32px ${scoreColor(latestScore)}40` : undefined,
+                boxShadow: latestScore
+                  ? `0 0 32px ${scoreColor(latestScore)}40, inset 0 0 0 1px rgba(255,255,255,0.12)`
+                  : 'inset 0 0 0 1px rgba(255,255,255,0.12)',
                 border: `2px solid ${latestScore ? scoreColor(latestScore) : '#3f3f46'}`,
               }}
             >
@@ -275,9 +276,6 @@ export default function MemberDashboard() {
                 </span>
               )}
             </div>
-            {latestScore && (
-              <p className="text-sm text-[rgba(180,180,255,0.35)] mt-0.5">{scoreZoneLabel(latestScore)}</p>
-            )}
             <p className="text-xs text-[rgba(180,180,255,0.25)] mt-1">{entries.length} check-ins</p>
           </div>
           <button
@@ -385,7 +383,7 @@ export default function MemberDashboard() {
                     className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
                     style={{
                       border: `2px solid ${scoreColor(selectedEntry.score)}`,
-                      boxShadow: `0 0 20px ${scoreColor(selectedEntry.score)}40`,
+                      boxShadow: `0 0 20px ${scoreColor(selectedEntry.score)}40, inset 0 0 0 1px rgba(255,255,255,0.12)`,
                     }}
                   >
                     <span className="text-2xl font-black" style={{ color: scoreColor(selectedEntry.score) }}>
@@ -393,7 +391,6 @@ export default function MemberDashboard() {
                     </span>
                   </div>
                   <div>
-                    <p className="text-white font-bold">{scoreZoneLabel(selectedEntry.score)}</p>
                     <p className="text-xs text-[rgba(180,180,255,0.4)] mt-0.5">
                       {formatFullDate(selectedEntry.interaction_date)}
                     </p>
