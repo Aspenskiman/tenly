@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 import Layout from '../components/Layout';
 import { getCompanyData } from '../api/teams';
-import { scoreColor, scoreZoneLabel } from '../lib/scores';
+import { scoreColor } from '../lib/scores';
 
 interface Entry { score: number; interaction_date: string; notes: string | null; }
 interface Member { id: string; name: string; entries: Entry[]; }
@@ -145,7 +145,7 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
           </div>
         </div>
         <p style={{ fontSize: 11, color: P.textMute, marginTop: 8 }}>
-          {team.members.length} member{team.members.length !== 1 ? 's' : ''} · {scoreZoneLabel(Math.round(avg ?? 5))}
+          {team.members.length} member{team.members.length !== 1 ? 's' : ''}
         </p>
       </div>
 
@@ -210,6 +210,7 @@ function TeamCard({ team, rank }: { team: Team; rank: number }) {
                   width: 28, height: 28, borderRadius: '50%',
                   background: m.avg ? `${scoreColor(m.avg)}18` : 'rgba(124,111,247,0.08)',
                   border: `1px solid ${m.avg ? `${scoreColor(m.avg)}35` : P.border}`,
+                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.12)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11, fontWeight: 700,
                   color: m.avg ? scoreColor(m.avg) : P.textMute,
@@ -313,7 +314,7 @@ export default function ExecutiveDashboard() {
 
         {/* Stat strip */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 14, ...fadeIn(80) }}>
-          <StatCard label="Engagement Score" value={avg !== null ? avg.toFixed(1) : '—'} sub={avg !== null ? scoreZoneLabel(Math.round(avg)) : undefined} valueColor={companyColor} />
+          <StatCard label="Engagement Score" value={avg !== null ? avg.toFixed(1) : '—'} valueColor={companyColor} />
           <StatCard label="Total Members" value={String(totalMembers)} sub={`${teams.length} teams`} />
           <StatCard label="Period" value={days === 7 ? '7d' : days === 30 ? '30d' : '90d'} sub={periodLabel} />
           <StatCard label="Needs Attention" value={String(needsAttention)} sub={needsAttention === 0 ? 'All teams stable' : 'teams trending down'} valueColor={needsAttention > 0 ? P.orange : undefined} />

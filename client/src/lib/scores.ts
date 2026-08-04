@@ -1,26 +1,41 @@
+const SCORE_RAMP: Record<number, string> = {
+  1: '#7058CE',
+  2: '#7A64D2',
+  3: '#8571D6',
+  4: '#907DD9',
+  5: '#9A89DD',
+  6: '#A596E0',
+  7: '#B0A2E4',
+  8: '#BAAFE8',
+  9: '#C5BBEB',
+  10: '#D0C8EF',
+};
+
+function clampScore(score: number): number {
+  return Math.min(10, Math.max(1, Math.round(score)));
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const n = parseInt(hex.slice(1), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
 export function scoreColor(score: number): string {
-  if (score >= 7) return '#818CF8';
-  if (score >= 4) return '#FFF200';
-  return '#F97316';
+  return SCORE_RAMP[clampScore(score)];
+}
+
+export function scoreTextColor(score: number): string {
+  return clampScore(score) <= 5 ? '#FFFFFF' : '#0D0D1A';
 }
 
 export function scoreColorBg(score: number): string {
-  if (score >= 7) return 'rgba(129,140,248,0.15)';
-  if (score >= 4) return 'rgba(255,242,0,0.12)';
-  return 'rgba(249,115,22,0.15)';
+  const { r, g, b } = hexToRgb(scoreColor(score));
+  return `rgba(${r},${g},${b},0.15)`;
 }
 
 export function scoreGlow(score: number): string {
-  if (score >= 7) return 'rgba(129,140,248,0.35)';
-  if (score >= 4) return 'rgba(255,242,0,0.3)';
-  return 'rgba(249,115,22,0.35)';
-}
-
-export function scoreZoneLabel(score: number): string {
-  if (score >= 9) return 'Thriving';
-  if (score >= 7) return 'Sweet Spot';
-  if (score >= 4) return 'Holding';
-  return 'Needs Support';
+  const { r, g, b } = hexToRgb(scoreColor(score));
+  return `rgba(${r},${g},${b},0.35)`;
 }
 
 export function trendColor(trend: 'up' | 'down' | 'stable'): string {

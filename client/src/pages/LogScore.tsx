@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { getMyTeams, getTeamSummary, logEntry, getMemberEntries, MemberWithTrend } from '../api/teams';
-import { scoreColor, formatDate, scoreZoneLabel } from '../lib/scores';
+import { scoreColor, scoreTextColor, formatDate } from '../lib/scores';
 
 function suggestionAccent(s: number): string {
   if (s >= 8) return '#22C55E';
@@ -148,10 +148,16 @@ export default function LogScore() {
                     onClick={() => setScore(n)}
                     className={`h-14 rounded-xl text-lg font-black transition-all border-2 ${
                       isSelected
-                        ? 'border-transparent text-black scale-105'
+                        ? 'border-transparent scale-105'
                         : 'border-[rgba(124,111,247,0.15)] text-[rgba(180,180,255,0.5)] hover:border-zinc-600 hover:text-white bg-[#13132A]'
                     }`}
-                    style={isSelected ? { backgroundColor: color, borderColor: color } : {}}
+                    style={isSelected ? {
+                      backgroundColor: color,
+                      borderColor: color,
+                      color: scoreTextColor(n),
+                      outline: '1px solid rgba(255,255,255,0.12)',
+                      outlineOffset: '-1px',
+                    } : {}}
                   >
                     {n}
                   </button>
@@ -176,12 +182,9 @@ export default function LogScore() {
               </div>
             )}
 
-            {/* Zone label + teaching moment */}
+            {/* Teaching moment */}
             {score && (
               <div className="text-center space-y-1 pt-1">
-                <p className="text-xs" style={{ color: 'rgba(180,180,255,0.3)' }}>
-                  {scoreZoneLabel(score)}
-                </p>
                 <p className="text-xs" style={{ color: 'rgba(180,180,255,0.3)' }}>
                   {getTeachingLine(score)}
                 </p>
